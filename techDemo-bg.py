@@ -16,7 +16,7 @@ class Koala(pygame.sprite.Sprite):
         pos = pygame.mouse.get_pos()
         self.rect.midtop = pos
 
-def load_image(name, colorkey=None):
+def load_image(name, colorkey = None):
     fullname = os.path.join('', name)
     try:
         image = pygame.image.load(fullname)
@@ -55,12 +55,11 @@ def timerFired(data):
             keyPressed(event, data)
 
 def rotKoala(data):
-    # Rotating an image
+    # Rotating the koala
     rotated = pygame.transform.rotate(data.koala, math.pi / 2)
     return rotated
 
 def redrawAll(data):
-    # Copies the image to x=50, y=100 on the screen
     data.allsprites.update()
     data.screen.blit(data.background, (0, 0))
     data.allsprites.draw(data.screen)
