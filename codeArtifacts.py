@@ -11,6 +11,9 @@ class Ball(pygame.sprite.Sprite):
         # Call Sprite initializer
         pygame.sprite.Sprite.__init__(self)
         self.image, self.rect = load_image("crystal_sphere.png",-1)
+        self.move = 10
+    def move(self):
+        pass
     
 
 def load_image(name, colorkey = None):
@@ -35,8 +38,9 @@ def mousePressed(event, data):
     redrawAll(data)
 
 def keyPressed(event, data):
-    pass
-
+    if (event.key == pygame.K_LEFT):
+        data.ball.moveLeft
+        
 def timerFired(data):
     redrawAll(data)
     data.clock.tick(data.FPS)
@@ -67,6 +71,8 @@ def init(data):
     data.ball = Ball()
     data.allsprites = pygame.sprite.RenderPlain(data.ball)
     data.screen = pygame.display.get_surface()
+
+    data.ball.rect.x = 
 
     data.background = pygame.Surface(data.screen.get_size())
     data.background = data.background.convert()
