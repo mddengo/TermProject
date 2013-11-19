@@ -2,27 +2,46 @@
 # Technology Demonstration
 
 # Import modules:
-import pygame, math
+import os, sys, math
+import pygame
 from pygame.locals import *
 
-class Koala(object):
-    imageFile = "koala.png"
-    position = (300,300)
-    surface = None
+class Koala(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self) #call Sprite initializer
+        self.image, self.rect = load_image('koala.png', -1)
+
+    def update(self):
+        "move the fist based on the mouse position"
+        pos = pygame.mouse.get_pos()
+        self.rect.midtop = pos
+
+def load_image(name, colorkey=None):
+    fullname = os.path.join('', name)
+    try:
+        image = pygame.image.load(fullname)
+    except pygame.error, message:
+        print 'Cannot load image:', name
+        raise SystemExit, message
+    image = image.convert()
+    if colorkey is not None:
+        if colorkey is -1:
+            colorkey = image.get_at((0,0))
+        image.set_colorkey(colorkey, RLEACCEL)
+    return image, image.get_rect()
 
 def mousePressed(event, data):
     print "Mouse Pressed"
     redrawAll(data)
 
 def keyPressed(event, data):
-    if (event.key == pygame.K_SPACE):
-        data.koala = rot_center(data.koala, 3)
-    redrawAll(data)
+    pass
 
 def timerFired(data):
     redrawAll(data)
     data.clock.tick(data.FPS)
     data.mousePos = pygame.mouse.get_pos()
+    
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
             pygame.quit()
@@ -37,25 +56,25 @@ def rotKoala(data):
     rotated = pygame.transform.rotate(data.koala, math.pi / 2)
     return rotated
 
-def rot_center(image, angle):
-    """Rotate an image while keeping its center and size"""
-    orig_rect = image.get_rect()
-    rot_image = pygame.transform.rotate(image, angle)
-    rot_rect = orig_rect.copy()
-    rot_rect.center = rot_image.get_rect().center
-    rot_image = rot_image.subsurface(rot_rect).copy()
-    return rot_image
-
 def redrawAll(data):
     # Copies the image to x=50, y=100 on the screen
-    data.screen.blit(data.koala)
+    data.allsprites.update()
+    data.screen.blit(data.background, (0, 0))
+    data.allsprites.draw(data.screen)
     pygame.display.flip()
 
 def init(data):
     data.mode = "Running"
     data.FPS = 30
+    pygame.mouse.set_visible(0)
+
     data.koala = Koala()
-    koala.surface = 
+    data.allsprites = pygame.sprite.RenderPlain(data.koala)
+    data.screen = pygame.display.get_surface()
+    
+    data.background = pygame.Surface(data.screen.get_size())
+    data.background = data.background.convert()
+    data.background.fill((250, 250, 250))
 
 def run():
     pygame.init()
