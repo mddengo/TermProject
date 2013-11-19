@@ -12,7 +12,7 @@ class Koala(pygame.sprite.Sprite):
         self.image, self.rect = load_image('koala.png', -1)
 
     def update(self):
-        "move the fist based on the mouse position"
+        "move the koala based on the mouse position"
         pos = pygame.mouse.get_pos()
         self.rect.midtop = pos
 
@@ -25,8 +25,11 @@ def load_image(name, colorkey=None):
         raise SystemExit, message
     image = image.convert()
     if colorkey is not None:
+        # If there weren't an image file, changes the color to the one at the
+        # top left corner
         if colorkey is -1:
             colorkey = image.get_at((0,0))
+        # RLEACCEL is for older computers; tunes the graphics
         image.set_colorkey(colorkey, RLEACCEL)
     return image, image.get_rect()
 
