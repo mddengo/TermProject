@@ -47,16 +47,18 @@ class Ball(pygame.sprite.Sprite):
         # the ball should also keep moving in the x-direction 
         pass
 
+    # updates ball's position and checks for collision
+    # ???????!!!!
 ##    def update(self):
 ##        if (self.rect.left < 0) or (self.rect.right > self.width):
-##            self.speedx = -self.speedx
-##        if (self.rect.top < 0):
-##            #game over!
-##            pass
-##        self.rect.left = reset(self.rect.left, 0, self.width)
-##        self.rect.right = reset(self.rect.right, 0, self.width)        
-##        self.rect.top = reset(self.rect.top, 0, self.height)
-##        self.rect.bottom = reset(self.rect.bottom, 0, self.height)
+##            #self.speedx = -self.speedx
+####        if (self.rect.top < 0):
+####            #game over!
+####            pass
+##            self.rect.left = reset(self.rect.left, 0, self.width)
+##            self.rect.right = reset(self.rect.right, 0, self.width)        
+####        self.rect.top = reset(self.rect.top, 0, self.height)
+####        self.rect.bottom = reset(self.rect.bottom, 0, self.height)
         
     # Test for collisions with edge of screen
     # ??? Not sure where to put this
@@ -136,10 +138,10 @@ def mousePressed(event, data):
 def keyPressed(event, data):
     if (event.key == pygame.K_LEFT):
         data.ball.moveLeft()
-        #data.ball.update()
+        data.ball.update()
     elif (event.key == pygame.K_RIGHT):
         data.ball.moveRight()
-        #data.ball.update()
+        data.ball.update()
     elif (event.key == pygame.K_p):
         # pause the game
         # takes player to pause screen
