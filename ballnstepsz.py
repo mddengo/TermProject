@@ -2,17 +2,16 @@
 
 
 # Import modules:
-import os, sys, math
+import os, sys, math, random
 import pygame
 from pygame.locals import *
 
 # Create the ball
 class Ball(pygame.sprite.Sprite):
-    
     def __init__(self):
         # Call Sprite initializer
         pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image("crystal_sphere.png", -1).convert()
+        self.image, self.rect = load_image("crystal_sphere.png", -1)
         self.speedx = 6
         self.speedy = 0
         self.area = self.image.get_rect()
@@ -36,42 +35,15 @@ class Ball(pygame.sprite.Sprite):
         # the ball should also keep moving in the x-direction 
         pass
 
-  
     # Test for collisions with edge of screen
     # ??? Not sure where to put this
 def windowCollision(data):
     if (data.ball.rect.left < 0):
-        data.ball.rect.left = data.screen.left
+        data.ball.rect.left = 0
     if (data.ball.rect.right > data.width):
-        data.ball.rect.right = data.screen.right
-    if (data.ball.rect.top < 0):
-        data.isGameOver = True
-  
-def reset(val, low, high):
-    return min(max(val, low), high)        
-
-# Move all the steps (the sprite group) in the -y direction (up)
-# put this in timerFired
-# speed should increase with each level
-def moveSteps(data):
-    steps = steps.move(0, -10) # or whatever
-    # the way the Steps move is based on time and not user control       
-
-### Create the steps
-def drawSteps(data):
-    class Steps(pygame.sprite.Sprite):
-        # the speed should increase with each level
-        speedx = 0
-        speedy = 10
-        def __init__(self):
-            pygame.sprite.Sprite.__init__(self) # ??? error here
-            #self.image, self.rect = load_image("presteps.png", -1)
-            self.area = self.image.get_rect()
-            
-    # scale steps so left and right edges touch left/right edges of screen??
-    stepsBG = load_image("presteps.png", -1)
-    stepsBG = pygame.transform.scale(stepsBG, data.screenSize)
-
+        data.ball.rect.right = data.width
+    #if (data.ball.rect.top < 0):
+    #    data.isGameOver = True    
 
 # Uploads an image file
 def load_image(name, colorkey = None):
@@ -91,27 +63,18 @@ def load_image(name, colorkey = None):
         image.set_colorkey(colorkey, RLEACCEL)
     return image, image.get_rect()
 
-# Check for win
-def win(data):
-    data.mode = "Done"
-    # win screen, etc.
-    while True:
-        for event in pygame.event.get():
-            if (event.type == pygame.QUIT):
-                pygame.quit()
-                data.mode = "Done"
-
 def mousePressed(event, data):
     print "Mouse Pressed"
     redrawAll(data)
 
 def keyPressed(event, data):
     if (event.key == pygame.K_LEFT):
+        windowCollision(data)
         data.ball.moveLeft()
-        data.ball.update()
+        #data.ball.update()
     elif (event.key == pygame.K_RIGHT):
         data.ball.moveRight()
-        data.ball.update()
+        #data.ball.update()
     elif (event.key == pygame.K_p):
         # pause the game
         # takes player to pause screen
@@ -123,13 +86,61 @@ def keyUnpressed(event, data):
     if (event.key == K_LEFT) or (event.key == K_DOWN):
         data.ball.speedx = 0
         data.ball.speedy = 0
-        data.ball.state = "still"
+
+
+def createSteps(data):
+    class Steps(pygame.sprite.Sprite):
+        def __init__(self, width, height, color):
+            pygame.sprite.Sprite.__init__(self)
+            
+            # The width of each step needs to be random
+            self.height = height
+            self.image = pygame.Surface([width, self.height])
+            self.rect = self.image.get_rect()
+            self.image.fill(color)
+    
+    # 40 represents ball size
+    stepWidth = random.randint(40, data.width - 40)
+    data.stepHeight = 30   
+    (data.speedx, data.speedy) = (0, 3)
+    data.spaceY = int(40 * 1.25)
+    data.spaceX = int(40 * 1.25)
+    red = data.redColor
+    
+    # Draw randomly sized steps
+    # There should be spaces in between steps (vertically and horizontally)
+    data.randStep = Steps(stepWidth, data.stepHeight, red)
+    data.randStep.rect.x = 0 
+    data.randStep.rect.y = data.height #+ data.spaceY
+    #data.screen.blit(data.randStep, (0, data.height))
+
+    data.stepsList.add(data.randStep)
+
+# add spaces between steps...??    
+def updateSteps(data):
+    for step in data.stepsList:
+        data.randStep.rect.x += data.speedx
+        data.randStep.rect.y += -data.speedy
+    
+
+# Check for win
+def win(data):
+    data.mode = "Done"
+    # win screen, etc.
+    while True:
+        for event in pygame.event.get():
+            if (event.type == pygame.QUIT):
+                pygame.quit()
+                data.mode = "Done"
+
   
 def timerFired(data):
-    redrawAll(data)
-    data.clock.tick(data.FPS)
-    data.mousePos = pygame.mouse.get_pos()
-
+    if (data.mode != "Done"):
+        redrawAll(data)
+        data.clock.tick(data.FPS)
+        data.mousePos = pygame.mouse.get_pos()
+        createSteps(data)
+        updateSteps(data)
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
             pygame.quit()
@@ -144,8 +155,7 @@ def redrawAll(data):
     #data.stepsSprite.update()
     data.screen.blit(data.background, (0, 0))
     data.ballSprite.draw(data.screen)
-    #data.stepsSprite.draw(data.screen)
-    #drawSteps(data)
+    data.stepsList.draw(data.screen)
     pygame.display.update()
     pygame.display.flip()
 
@@ -156,41 +166,35 @@ def init(data):
     # Hides or shows the cursor by taking in a bool
     pygame.mouse.set_visible(0)
 
+    data.keyHeld = False
+    
+    data.redColor = (255, 0, 60)
     data.ball = Ball()
     data.ballSprite = pygame.sprite.RenderPlain(data.ball)
 
     # Creating a sprites group for all the steps
-    data.allSteps = pygame.sprite.Group()
     #data.steps = Steps()
-##    # ???
-##    # Not sure where to put this -- in the class Steps?
-##    data.stepsGroup.add(data.steps) 
-##    
-    #data.stepsSprite = pygame.sprite.RenderPlain(data.steps)
-    #drawSteps(data)
-    
+    data.stepsList = pygame.sprite.Group()
+
     data.screen = pygame.display.get_surface()
-
-    data.isGameOver = False
-
     data.background = pygame.Surface(data.screen.get_size())
     data.background = data.background.convert()
     data.background.fill((0, 0, 0))
+    
+    createSteps(data)
+    windowCollision(data)
 
 def run():
     pygame.init()
-
     # Not given the Canvas class
     class Struct: pass
     data = Struct()
-
     # Initialize screen
     data.width = 350
     data.height = 550
     data.screenSize = (data.width, data.height)
     data.screen = pygame.display.set_mode(data.screenSize)
     pygame.display.set_caption("Window")
-
     # Initialize clock
     data.clock = pygame.time.Clock()
     init(data)
@@ -204,8 +208,10 @@ def run():
             elif (event.type == pygame.MOUSEBUTTONDOWN):
                 mousePressed(event, data)
             elif (event.type == pygame.KEYDOWN):
+                data.keyHeld = True
                 keyPressed(event, data)
             elif (event.type == pygame.KEYUP):
+                data.keyHeld = False
                 keyUnpressed(event, data)
 
 run()
