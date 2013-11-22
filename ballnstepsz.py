@@ -100,27 +100,27 @@ def createSteps(data):
             self.image.fill(color)
     
     # 40 represents ball size
-    stepWidth = random.randint(40, data.width - 40)
-    data.stepHeight = 30   
-    (data.speedx, data.speedy) = (0, 3)
+    stepWidth = random.randint(30, data.width - 30)
+    data.stepHeight = 20   
+    (data.speedx, data.speedy) = (0, 1)
     data.spaceY = int(40 * 1.25)
     data.spaceX = int(40 * 1.25)
     red = data.redColor
     
     # Draw randomly sized steps
     # There should be spaces in between steps (vertically and horizontally)
-    data.randStep = Steps(stepWidth, data.stepHeight, red)
-    data.randStep.rect.x = 0 
-    data.randStep.rect.y = data.height #+ data.spaceY
-    #data.screen.blit(data.randStep, (0, data.height))
-
-    data.stepsList.add(data.randStep)
-
-# add spaces between steps...??    
+    for i in xrange(100):
+        data.randStep = Steps(stepWidth, data.stepHeight, red)
+        data.randStep.rect.x = 0 
+        data.randStep.rect.y = data.height #- data.spaceY
+        data.stepsList.add(data.randStep)
+   
 def updateSteps(data):
     for step in data.stepsList:
-        data.randStep.rect.x += data.speedx
-        data.randStep.rect.y += -data.speedy
+        if (data.randStep.rect.y + data.speedy >= data.randStep.rect.y):
+            data.randStep.rect.y -= data.spaceY
+            data.randStep.rect.x += data.speedx
+            data.randStep.rect.y += -data.speedy
     
 
 # Check for win
@@ -135,12 +135,11 @@ def win(data):
 
   
 def timerFired(data):
-    if (data.mode != "Done"):
-        redrawAll(data)
-        data.clock.tick(data.FPS)
-        data.mousePos = pygame.mouse.get_pos()
-        createSteps(data)
-        updateSteps(data)
+    redrawAll(data)
+    data.clock.tick(data.FPS)
+    data.mousePos = pygame.mouse.get_pos()
+    #createSteps(data)
+    updateSteps(data)
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
             pygame.quit()
@@ -152,17 +151,17 @@ def timerFired(data):
 
 def redrawAll(data):
     data.ballSprite.update()
-    #data.stepsSprite.update()
     data.screen.blit(data.background, (0, 0))
     data.ballSprite.draw(data.screen)
     data.stepsList.draw(data.screen)
+    
     pygame.display.update()
     pygame.display.flip()
 
 def init(data):
     data.mode = "Running"
     # Frames per second
-    data.FPS = 30
+    data.FPS = 10
     # Hides or shows the cursor by taking in a bool
     pygame.mouse.set_visible(0)
 
