@@ -12,31 +12,20 @@ class Ball(pygame.sprite.Sprite):
     def __init__(self):
         # Call Sprite initializer
         pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image("crystal_sphere.png", -1)
+        self.image, self.rect = load_image("crystal_sphere.png", -1).convert()
         self.speedx = 6
         self.speedy = 0
         self.area = self.image.get_rect()
         self.width = self.area.width
         self.height = self.area.height
-        self.state = "still"
-        
-##    # Updates the position of the ball
-##    def update(self):
-##        newPos = self.rect.move(self.movex, self.movey)
-##        if self.area.contains(newPos):
-##            self.rect = newPos
-##        # Pumps events into event queue
-##        pygame.event.pump()
     
     # Moving the ball
     def moveLeft(self):
         self.rect = self.rect.move(-self.speedx, self.speedy)
-        self.state = "moveLeft"
+
     def moveRight(self):
         self.rect = self.rect.move(self.speedx, self.speedy)
-        self.state = "moveRight"
 
-        
     # Add gravity so ball falls down to the next step
     def gravity(self):
         # if the ball isn't touching any of the steps,
@@ -47,19 +36,7 @@ class Ball(pygame.sprite.Sprite):
         # the ball should also keep moving in the x-direction 
         pass
 
-    # updates ball's position and checks for collision
-    # ???????!!!!
-##    def update(self):
-##        if (self.rect.left < 0) or (self.rect.right > self.width):
-##            #self.speedx = -self.speedx
-####        if (self.rect.top < 0):
-####            #game over!
-####            pass
-##            self.rect.left = reset(self.rect.left, 0, self.width)
-##            self.rect.right = reset(self.rect.right, 0, self.width)        
-####        self.rect.top = reset(self.rect.top, 0, self.height)
-####        self.rect.bottom = reset(self.rect.bottom, 0, self.height)
-        
+  
     # Test for collisions with edge of screen
     # ??? Not sure where to put this
 def windowCollision(data):
@@ -69,40 +46,31 @@ def windowCollision(data):
         data.ball.rect.right = data.screen.right
     if (data.ball.rect.top < 0):
         data.isGameOver = True
-        
+  
 def reset(val, low, high):
     return min(max(val, low), high)        
 
+# Move all the steps (the sprite group) in the -y direction (up)
+# put this in timerFired
+# speed should increase with each level
+def moveSteps(data):
+    steps = steps.move(0, -10) # or whatever
+    # the way the Steps move is based on time and not user control       
+
 ### Create the steps
-##class Steps(object):
-##    
-##    def __init__(self):
-##        pygame.sprite.Sprite.__init__(self) # ??? error here
-##        self.image, self.rect = load_image("presteps.png", -1)
-##        self.rect.left = data.screen.left
-##        self.rect.right = data.screen.right
-##        # The speed should increase with each level
-##        self.speed = 10
-##        self.movex = 0
-##        self.movey = 0
-##        self.area = self.image.get_rect()
-##        self.state = "still"
-##        
-##     # Updates the position of the steps
-##    def update(self):
-##        newPos = self.rect.move(self.movex, self.movey)
-##        if self.area.contains(newPos):
-##            self.rect = newPos
-##        # Pumps events into event queue
-##        pygame.event.pump()
-##        
-##    # Move all the steps (the sprite group) in the -y direction (up)
-##    def moveSteps(self)
-##        self.movey -= self.speed
-##        return self.rect.move(self.movex, self.movey)
-##        # should be different than the format of the function for moving the Ball
-##        # because the way the Steps move is based on time and not user control
-##        self.state = "moveUp"        
+def drawSteps(data):
+    class Steps(pygame.sprite.Sprite):
+        # the speed should increase with each level
+        speedx = 0
+        speedy = 10
+        def __init__(self):
+            pygame.sprite.Sprite.__init__(self) # ??? error here
+            #self.image, self.rect = load_image("presteps.png", -1)
+            self.area = self.image.get_rect()
+            
+    # scale steps so left and right edges touch left/right edges of screen??
+    stepsBG = load_image("presteps.png", -1)
+    stepsBG = pygame.transform.scale(stepsBG, data.screenSize)
 
 
 # Uploads an image file
@@ -125,11 +93,13 @@ def load_image(name, colorkey = None):
 
 # Check for win
 def win(data):
-    if (data.isGameOver == True):
-        # takes player to Game Over screen
-        # the game over screen will display the score and an option whether to
-        # return to the menu or play again
-        pass
+    data.mode = "Done"
+    # win screen, etc.
+    while True:
+        for event in pygame.event.get():
+            if (event.type == pygame.QUIT):
+                pygame.quit()
+                data.mode = "Done"
 
 def mousePressed(event, data):
     print "Mouse Pressed"
@@ -154,7 +124,7 @@ def keyUnpressed(event, data):
         data.ball.speedx = 0
         data.ball.speedy = 0
         data.ball.state = "still"
-        
+  
 def timerFired(data):
     redrawAll(data)
     data.clock.tick(data.FPS)
@@ -175,6 +145,8 @@ def redrawAll(data):
     data.screen.blit(data.background, (0, 0))
     data.ballSprite.draw(data.screen)
     #data.stepsSprite.draw(data.screen)
+    #drawSteps(data)
+    pygame.display.update()
     pygame.display.flip()
 
 def init(data):
@@ -187,16 +159,16 @@ def init(data):
     data.ball = Ball()
     data.ballSprite = pygame.sprite.RenderPlain(data.ball)
 
-
-##    # Creating a sprites group for all the steps
-##    data.stepsGroup = pygame.sprite.Group()
-##    data.steps = Steps()
+    # Creating a sprites group for all the steps
+    data.allSteps = pygame.sprite.Group()
+    #data.steps = Steps()
 ##    # ???
 ##    # Not sure where to put this -- in the class Steps?
 ##    data.stepsGroup.add(data.steps) 
 ##    
-##    data.stepsSprite = pygame.sprite.RenderPlain(data.steps)
-
+    #data.stepsSprite = pygame.sprite.RenderPlain(data.steps)
+    #drawSteps(data)
+    
     data.screen = pygame.display.get_surface()
 
     data.isGameOver = False
@@ -217,7 +189,7 @@ def run():
     data.height = 550
     data.screenSize = (data.width, data.height)
     data.screen = pygame.display.set_mode(data.screenSize)
-    pygame.display.set_caption("Code Artifacts")
+    pygame.display.set_caption("Window")
 
     # Initialize clock
     data.clock = pygame.time.Clock()
