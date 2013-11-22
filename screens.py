@@ -30,44 +30,31 @@ class Screens(object):
         image = pygame.transform.smoothscale(image, (screenWidth,screenHeight))
         screen.blit(image, (0,0))
     
-    
+# Draws menu splash screen with buttons   
 class menuScreen(Screens):
     def __init__(self, screenWidth, screenHeight):
-        titleMaxWidth = 350
-        titleMaxHeight = 225
         iconMaxWidth = 275
         iconMaxHeight = 150
         
         self.buttonPressed = False
         
-        self.menuTitle = load_image("falldownTxt.png", -1)
-        self.menuPlay = load_image("menuplayTxt.png", -1)
         self.menuPlayPressed = load_image("menuplay_pressed.png", -1)
         self.menuTut = load_image("menututTxt.png", -1)
         self.menuTutPressed = load_image("menutut_pressed.png", -1)
         self.menuCreds = load_image("menucredsTxt.png", -1)
         self.menuCredsPressed = load_image("menucreds_pressed.png", -1)
-        self.menuSplash = load_image("menusplash.png")
+        self.menuSplash = load_image("menusplashwtitle.png")
         
-        self.titleWidth = int(0.75 * screenWidth)
-        self.titleHeight = int(0.25 * screenHeight)
-        self.titleSize = (self.buttonWidth, self.buttonHeight)
         self.iconWidth = int(0.5 * screenWidth)
         self.iconHeight = int(0.2 * screenHeight)
         self.iconSize = (self.iconWidth, self.iconHeight)
-        
-        if (self.titleWidth > titleMaxWidth):
-            self.titleWidth = titleMaxWidth
-        if (self.titleHeight > titleMaxHeight):
-            self.titleHeight = titleMaxHeight
+
         if (self.iconWidth > iconMaxWidth):
             self.iconWidth = iconMaxWidth
         if (self.iconHeight > iconMaxHeight):
             self.iconHeight = iconMaxHeight
         
         # Scale icons
-        self.menuTitle = pygame.transform.smoothscale(self.menuTitle,
-                                                      self.titleSize)
         self.menuPlay = pygame.transform.smoothscale(self.menuPlay,
                                                      self.titleSize)
         self.menuTut = pygame.transform.smoothscale(self.menuTut, self.iconSize)
@@ -83,34 +70,59 @@ class menuScreen(Screens):
 
     def draw(self, screen, screenWidth, screenHeight):
         pygame.mouse.set_visible(1)
-        # Draw menu splash screen
+        # Draw menu screen
         Screens().draw(screen, screenWidth, screenHeight, self.menuSplash)
+        
         # Position buttons
-        pos = (int(screenWidth/2 - 0.5*self.iconSize),\
-        screenHeight/2- 0.5*self.iconSize)
-        # If the mouse is hovering over the icon, show pressed state
-        if not(self.iconHover):
-            screen.blit(self.startIcon,pos)
+        playPos = (int(0.5 * screenWidth), int(0.35 * screenHeight))
+        tutPos = (int(0.5 * screenWidth),
+                  int(0.35 * screenHeight + 1.25 * self.iconHeight))
+        credsPos = (int(0.5 * screenWidth),
+                    int(0.70 * screenHeight + 0.25 * self.iconHeight))
+        
+        # Show pressed state when button is clicked
+        if not(self.buttonPressed):
+            screen.blit(self.menuPlay, playPos)
+            screen.blit(self.menuTut, tutPos)
+            screen.blit(self.menuCreds, credsPos)
         else:
-            screen.blit(self.startIcon_pressed,pos)
-        # Store Top Left, Bottom Right of button
-        self.buttonCoods = [pos, (pos[0] + self.iconSize, pos[1] + \
-        self.iconSize)]
+            screen.blit(self.menuPlayPressed, playPos)
+            screen.blit(self.menuTutPressed, tutPos)
+            screen.blit(self.menuCredsPressed, credsPos)
+
+    def updateAll(self):
+        (mouseClickX, mouseClickY) = pygame.mouse.get_pos()
         
-    def update(self):
-        """Updates the menu ie. update if the user is hovering over the icon"""
-        mouse_x,mouse_y = pygame.mouse.get_pos()
-        # See if the cursor is within the rectuangular bounds of the icon
-        if mouse_x < self.buttonCoods[1][0] and mouse_x > \
-        self.buttonCoods[0][0]:
-                if mouse_y < self.buttonCoods[1][1] and mouse_x > \
-                self.buttonCoods[0][1]:
-                    # If it is, set the iconHover and break out of this function
-                    self.iconHover = True
+        # Store icon coordinates (top left & bottom right)
+        self.playCoords = []
+        self.tutCoords = []
+        self.credsCoords = []
+        
+        # Check if player clicks the icons
+        if ((mouseClickX < self.playCoords[1][0]) and
+            (mouseClickX > self.playCoords[0][0])):
+                if ((mouseClickY < self.playCoords[1][1]) and
+                    (mouseClickY > self.playCoords[0][1])):
+                    self.buttonPressed = True
                     return
-        # Only reach here if the player isn't hovering over the icon
-        self.iconHover = False
+        # repeat for other buttons
+        self.buttonPressed = False
         
-    def checkClick(self):
-        return self.iconHover
+    def clicked(self):
+        return self.buttonPressed
+    
+class Paused(Screens):
+    #code
+    pass
+
+class GameOver(Screens):
+    #code
+    pass
+
+class Creds(Screens):
+    #code
+    pass
+
+
+
     
