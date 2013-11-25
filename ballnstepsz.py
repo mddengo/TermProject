@@ -89,7 +89,6 @@ class Steps(pygame.sprite.Sprite):
     def __init__(self, width, height, color):
         pygame.sprite.Sprite.__init__(self)
         
-        # The width of each step needs to be random
         self.height = height
         self.image = pygame.Surface([width, self.height])
         self.rect = self.image.get_rect()
@@ -97,17 +96,15 @@ class Steps(pygame.sprite.Sprite):
 
 def createLeftStep(data):
     # 40 represents ball size
+    # The width of each step needs to be random
     stepWidth = random.randint(30, data.width - 40)
-    # There should at most be 3 steps in each row
-    randStepsInRow = random.randint(1, 3) # where to put this..
     
     data.stepHeight = 20   
     (data.speedx, data.speedy) = (0, 5)
+    # Minimum distance between two steps on top of each other
     data.spaceY = int(40 * 1.75)
-    data.spaceX = int(40 * 1.75)
     red = data.redColor
     # Draw randomly sized steps
-    # There should be spaces in between steps (vertically and horizontally)
     data.leftRandStep = Steps(stepWidth, data.stepHeight, red)
     data.leftRandStep.rect.x = 0 
     data.leftRandStep.rect.y = data.height 
@@ -115,22 +112,38 @@ def createLeftStep(data):
 
 def createRightStep(data):
     # 40 represents ball size
+    # The width of each step needs to be random
     stepWidth = random.randint(30, data.width - 40)
-    # There should at most be 3 steps in each row
-    randStepsInRow = random.randint(1, 3) # where to put this..
-    
-    data.stepHeight = 20   
-    (data.speedx, data.speedy) = (0, 5)
-    data.spaceY = int(40 * 1.75)
-    data.spaceX = int(40 * 1.75)
+
     red = data.redColor
     # Draw randomly sized steps
-    # There should be spaces in between steps (vertically and horizontally)
     data.rightRandStep = Steps(stepWidth, data.stepHeight, red)
+    # Sets each step on the right side of the screen
     data.rightRandStep.rect.x = data.width - stepWidth 
     data.rightRandStep.rect.y = data.height 
     data.stepsList.add(data.rightRandStep)
 
+
+def createMiddleStep(data):
+    # 40 represents ball size
+    # The width of each step needs to be random
+    stepWidth = random.randint(30, data.width - 40)
+    # Choose a random point on which to place the middle step
+    # Must be in between two outer steps and leave enough space for the ball
+    randCenterX = random.randint(75, data.width - 75) # how to decide?????
+    red = data.redColor
+    
+    # Draw randomly sized steps
+    data.midRandStep = Steps(stepWidth, data.stepHeight, red)
+    data.midRandStep.rect.centerx = randCenterX
+    data.midRandStep.rect.y = data.height 
+    data.stepsList.add(data.midRandStep)
+
+
+# Minimum distance between two steps next to each other
+#data.spaceX = int(40 * 1.75)
+# There should at most be 3 steps in each row
+# randStepsInRow = random.randint(1, 3) # where to put this??
    
 def updateSteps(data):
     for step in data.stepsList:
@@ -144,6 +157,7 @@ def trySpawnNewStep(data):
     if (data.lowest == 0):
         createLeftStep(data)
         createRightStep(data)
+        createMiddleStep(data)
 
 
 def mousePressed(event, data):
@@ -231,6 +245,7 @@ def init(data):
     
     createLeftStep(data)
     createRightStep(data)
+    createMiddleStep(data)
     #data.ball.windowCollision(data)
     data.ball.moveRight(data)
     data.ball.addGravity(data)
