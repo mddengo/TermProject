@@ -6,6 +6,8 @@ import os, sys, math, random
 import pygame
 from pygame.locals import *
 
+
+
 # Create the ball
 class Ball(pygame.sprite.Sprite):
     def __init__(self):
@@ -35,6 +37,16 @@ class Ball(pygame.sprite.Sprite):
         # the ball should also keep moving in the x-direction 
         pass
 
+class Steps(pygame.sprite.Sprite):
+    def __init__(self, width, height, color):
+        pygame.sprite.Sprite.__init__(self)
+        
+        # The width of each step needs to be random
+        self.height = height
+        self.image = pygame.Surface([width, self.height])
+        self.rect = self.image.get_rect()
+        self.image.fill(color)
+
     # Test for collisions with edge of screen
     # ??? Not sure where to put this
 def windowCollision(data):
@@ -46,6 +58,8 @@ def windowCollision(data):
     #    data.isGameOver = True    
 
 # Uploads an image file
+# I did NOT write this function!
+# Credits: http://www.pygame.org/docs/tut/chimp/ChimpLineByLine.html
 def load_image(name, colorkey = None):
     fullname = os.path.join('', name)
     try:
@@ -88,40 +102,28 @@ def keyUnpressed(event, data):
         data.ball.speedy = 0
 
 
-def createSteps(data):
-    class Steps(pygame.sprite.Sprite):
-        def __init__(self, width, height, color):
-            pygame.sprite.Sprite.__init__(self)
-            
-            # The width of each step needs to be random
-            self.height = height
-            self.image = pygame.Surface([width, self.height])
-            self.rect = self.image.get_rect()
-            self.image.fill(color)
-    
+def createStep(data):
     # 40 represents ball size
     stepWidth = random.randint(30, data.width - 30)
     data.stepHeight = 20   
-    (data.speedx, data.speedy) = (0, 1)
-    data.spaceY = int(40 * 1.25)
-    data.spaceX = int(40 * 1.25)
+    (data.speedx, data.speedy) = (0, 5)
+    data.spaceY = int(40 * 1.75)
+    data.spaceX = int(40 * 1.75)
     red = data.redColor
     
     # Draw randomly sized steps
     # There should be spaces in between steps (vertically and horizontally)
-    for i in xrange(100):
-        data.randStep = Steps(stepWidth, data.stepHeight, red)
-        data.randStep.rect.x = 0 
-        data.randStep.rect.y = data.height #- data.spaceY
-        data.stepsList.add(data.randStep)
+    #for i in xrange(100):
+    data.randStep = Steps(stepWidth, data.stepHeight, red)
+    data.randStep.rect.x = 0 
+    data.randStep.rect.y = data.height #- data.spaceY
+    data.stepsList.add(data.randStep)
    
 def updateSteps(data):
     for step in data.stepsList:
-        if (data.randStep.rect.y + data.speedy >= data.randStep.rect.y):
-            data.randStep.rect.y -= data.spaceY
-            data.randStep.rect.x += data.speedx
-            data.randStep.rect.y += -data.speedy
-    
+        step.rect.y -= data.speedy
+        if (step.rect.y + data.stepHeight == 0):
+            data.stepsList.remove(step)
 
 # Check for win
 def win(data):
@@ -138,8 +140,7 @@ def timerFired(data):
     redrawAll(data)
     data.clock.tick(data.FPS)
     data.mousePos = pygame.mouse.get_pos()
-    #createSteps(data)
-    updateSteps(data)
+    
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
             pygame.quit()
@@ -148,12 +149,22 @@ def timerFired(data):
             mousePressed(event, data)
         elif (event.type == pygame.KEYDOWN):
             keyPressed(event, data)
+        #elif (event.type == MOVESTEPS):
+        #    updateSteps(data)
+        
+def trySpawnNewStep(data):
+    data.lowest += data.speedy
+    data.lowest %= data.spaceY
+    if (data.lowest == 0):
+        createStep(data)
 
 def redrawAll(data):
     data.ballSprite.update()
     data.screen.blit(data.background, (0, 0))
     data.ballSprite.draw(data.screen)
     data.stepsList.draw(data.screen)
+    updateSteps(data)
+    trySpawnNewStep(data)
     
     pygame.display.update()
     pygame.display.flip()
@@ -174,13 +185,14 @@ def init(data):
     # Creating a sprites group for all the steps
     #data.steps = Steps()
     data.stepsList = pygame.sprite.Group()
+    data.lowest = 0
 
     data.screen = pygame.display.get_surface()
     data.background = pygame.Surface(data.screen.get_size())
     data.background = data.background.convert()
     data.background.fill((0, 0, 0))
     
-    createSteps(data)
+    createStep(data)
     windowCollision(data)
 
 def run():
