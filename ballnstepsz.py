@@ -7,56 +7,6 @@ import pygame
 from pygame.locals import *
 
 
-
-# Create the ball
-class Ball(pygame.sprite.Sprite):
-    def __init__(self):
-        # Call Sprite initializer
-        pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image("crystal_sphere.png", -1)
-        self.speedx = 6
-        self.speedy = 0
-        self.area = self.image.get_rect()
-        self.width = self.area.width
-        self.height = self.area.height
-    
-    # Moving the ball
-    def moveLeft(self):
-        self.rect = self.rect.move(-self.speedx, self.speedy)
-
-    def moveRight(self):
-        self.rect = self.rect.move(self.speedx, self.speedy)
-
-    # Add gravity so ball falls down to the next step
-    def gravity(self):
-        # if the ball isn't touching any of the steps,
-        # increase the "speed" of the ball in the +y direction (down)
-        # to simulate the effects of gravity
-        # at the same time, keep the positive or negative speed in the
-        # x direction (left/right) the same so the ball doesn't just fall;
-        # the ball should also keep moving in the x-direction 
-        pass
-
-class Steps(pygame.sprite.Sprite):
-    def __init__(self, width, height, color):
-        pygame.sprite.Sprite.__init__(self)
-        
-        # The width of each step needs to be random
-        self.height = height
-        self.image = pygame.Surface([width, self.height])
-        self.rect = self.image.get_rect()
-        self.image.fill(color)
-
-    # Test for collisions with edge of screen
-    # ??? Not sure where to put this
-def windowCollision(data):
-    if (data.ball.rect.left < 0):
-        data.ball.rect.left = 0
-    if (data.ball.rect.right > data.width):
-        data.ball.rect.right = data.width
-    #if (data.ball.rect.top < 0):
-    #    data.isGameOver = True    
-
 # Uploads an image file
 # I did NOT write this function!
 # Credits: http://www.pygame.org/docs/tut/chimp/ChimpLineByLine.html
@@ -77,30 +27,59 @@ def load_image(name, colorkey = None):
         image.set_colorkey(colorkey, RLEACCEL)
     return image, image.get_rect()
 
-def mousePressed(event, data):
-    print "Mouse Pressed"
-    redrawAll(data)
+# Create the ball
+class Ball(pygame.sprite.Sprite):
+    def __init__(self):
+        # Call Sprite initializer
+        pygame.sprite.Sprite.__init__(self)
+        self.image, self.rect = load_image("crystal_sphere.png", -1)
+        self.speedx = 10
+        self.speedy = 0
+        self.area = self.image.get_rect()
+        self.width = self.area.width
+        self.height = self.area.height
+        
+        self.rightBound = self.rect.x + self.width
+        self.loBound = self.rect.y + self.height
+        self.gravity = 19
+    
+    # Moving the ball
+    def moveLeft(self):
+        self.rect = self.rect.move(-self.speedx, self.speedy)
+    def moveRight(self):
+        self.rect = self.rect.move(self.speedx, self.speedy)
 
-def keyPressed(event, data):
-    if (event.key == pygame.K_LEFT):
-        windowCollision(data)
-        data.ball.moveLeft()
-        #data.ball.update()
-    elif (event.key == pygame.K_RIGHT):
-        data.ball.moveRight()
-        #data.ball.update()
-    elif (event.key == pygame.K_p):
-        # pause the game
-        # takes player to pause screen
-        # if player presses 'p' again, resumes the game
-        pass
+    # Add gravity so ball falls down to the next step
+    def addGravity(self, data):
+        self.loBound += self.gravity
+        self.rect = self.rect.move(0, self.gravity)
+        if (self.loBound >= data.height):
+            self.gravity = 0
+        # if the ball isn't touching any of the steps,
+        # increase the "speed" of the ball in the +y direction (down)
+        # to simulate the effects of gravity
+        # at the same time, keep the positive or negative speed in the
+        # x direction (left/right) the same so the ball doesn't just fall;
+        # keeps moving in the x-direction 
 
-def keyUnpressed(event, data):
-    # If the keys are not being pressed, the ball stops moving
-    if (event.key == K_LEFT) or (event.key == K_DOWN):
-        data.ball.speedx = 0
-        data.ball.speedy = 0
+    def windowCollision(self, data):
+        if (self.rect.x == 0):
+            self.speedx = 0
+        if (self.rightBound == data.width):
+            self.speedx = 0
 
+        #if (data.ball.rect.top < 0):
+        #    data.isGameOver = True 
+
+class Steps(pygame.sprite.Sprite):
+    def __init__(self, width, height, color):
+        pygame.sprite.Sprite.__init__(self)
+        
+        # The width of each step needs to be random
+        self.height = height
+        self.image = pygame.Surface([width, self.height])
+        self.rect = self.image.get_rect()
+        self.image.fill(color)
 
 def createStep(data):
     # 40 represents ball size
@@ -113,17 +92,45 @@ def createStep(data):
     
     # Draw randomly sized steps
     # There should be spaces in between steps (vertically and horizontally)
-    #for i in xrange(100):
     data.randStep = Steps(stepWidth, data.stepHeight, red)
     data.randStep.rect.x = 0 
-    data.randStep.rect.y = data.height #- data.spaceY
+    data.randStep.rect.y = data.height 
     data.stepsList.add(data.randStep)
    
 def updateSteps(data):
     for step in data.stepsList:
         step.rect.y -= data.speedy
         if (step.rect.y + data.stepHeight == 0):
-            data.stepsList.remove(step)
+            data.stepsList.remove(step)   
+
+def trySpawnNewStep(data):
+    data.lowest += data.speedy
+    data.lowest %= data.spaceY
+    if (data.lowest == 0):
+        createStep(data)
+
+def mousePressed(event, data):
+    print "Mouse Pressed"
+    redrawAll(data)
+
+def keyPressed(event, data):
+    if (event.key == pygame.K_LEFT):    
+        data.ball.windowCollision(data)
+        data.ball.moveLeft()
+    elif (event.key == pygame.K_RIGHT):
+        data.ball.windowCollision(data)    
+        data.ball.moveRight()
+    elif (event.key == pygame.K_p):
+        # pause the game
+        # takes player to pause screen
+        # if player presses 'p' again, resumes the game
+        pass
+
+def keyUnpressed(event, data):
+    # If the keys are not being pressed, the ball stops moving
+    if (event.key == K_LEFT) or (event.key == K_DOWN):
+        data.ball.speedx = 0
+        data.ball.speedy = 0
 
 # Check for win
 def win(data):
@@ -140,6 +147,8 @@ def timerFired(data):
     redrawAll(data)
     data.clock.tick(data.FPS)
     data.mousePos = pygame.mouse.get_pos()
+    data.ball.addGravity(data)
+    #data.ball.windowCollision(data)
     
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
@@ -149,15 +158,7 @@ def timerFired(data):
             mousePressed(event, data)
         elif (event.type == pygame.KEYDOWN):
             keyPressed(event, data)
-        #elif (event.type == MOVESTEPS):
-        #    updateSteps(data)
-        
-def trySpawnNewStep(data):
-    data.lowest += data.speedy
-    data.lowest %= data.spaceY
-    if (data.lowest == 0):
-        createStep(data)
-
+   
 def redrawAll(data):
     data.ballSprite.update()
     data.screen.blit(data.background, (0, 0))
@@ -172,7 +173,7 @@ def redrawAll(data):
 def init(data):
     data.mode = "Running"
     # Frames per second
-    data.FPS = 10
+    data.FPS = 30
     # Hides or shows the cursor by taking in a bool
     pygame.mouse.set_visible(0)
 
@@ -183,7 +184,6 @@ def init(data):
     data.ballSprite = pygame.sprite.RenderPlain(data.ball)
 
     # Creating a sprites group for all the steps
-    #data.steps = Steps()
     data.stepsList = pygame.sprite.Group()
     data.lowest = 0
 
@@ -193,7 +193,8 @@ def init(data):
     data.background.fill((0, 0, 0))
     
     createStep(data)
-    windowCollision(data)
+    data.ball.windowCollision(data)
+    data.ball.addGravity(data)
 
 def run():
     pygame.init()
