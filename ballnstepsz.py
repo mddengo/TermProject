@@ -38,8 +38,6 @@ class Ball(pygame.sprite.Sprite):
         self.area = self.image.get_rect()
         self.width = self.area.width
         self.height = self.area.height
-        
-        #self.rightBound = self.rect.x + self.width
         self.loBound = self.rect.y + self.height
         self.gravity = 19
     
@@ -62,24 +60,17 @@ class Ball(pygame.sprite.Sprite):
         self.rect = self.rect.move(0, self.gravity)
         if (self.loBound >= data.height):
             self.gravity = 0
-        # if the ball isn't touching any of the steps,
-        # increase the "speed" of the ball in the +y direction (down)
-        # to simulate the effects of gravity
-        # at the same time, keep the positive or negative speed in the
-        # x direction (left/right) the same so the ball doesn't just fall;
-        # keeps moving in the x-direction 
+        # if the ball isn't touching any of the steps add gravity 
 
-        #if (data.ball.rect.top < 0):
-        #    data.isGameOver = True
-    
-    #def ballStepsColl(self, data):
-    #    for step in data.stepsList:
-    #        collides = pygame.sprite.spritecollide(self.rect, step)
-    #        if (collides == True):
-    #            self.rect.y -= data.speedy
-    #        else:
-    #            pass
-    
+#if (data.ball.rect.top < 0):
+#    data.isGameOver = True
+    def ballStepsColl(self, data):
+        # make sure ball still moves along step
+        for step in data.stepsList:
+            if (pygame.sprite.collide_rect(self, step) == True):
+                self.rect.y -= data.speedy
+            else:
+                data.ball.addGravity(data) #?    
 
 class Steps(pygame.sprite.Sprite):
     def __init__(self, width, height, color):
@@ -198,6 +189,7 @@ def timerFired(data):
     data.clock.tick(data.FPS)
     data.mousePos = pygame.mouse.get_pos()
     data.ball.addGravity(data)
+    data.ball.ballStepsColl(data)
     
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
@@ -233,8 +225,6 @@ def initSteps(data):
 def initBall(data):
     data.ball = Ball()
     data.ballSprite = pygame.sprite.RenderPlain(data.ball)
-    #data.ball.ballStepsColl(data)
-    #data.ball.windowCollision(data)
     data.ball.moveRight(data)
     data.ball.addGravity(data)
 
@@ -247,8 +237,9 @@ def init(data):
 
     data.keyHeld = False
     
-    initBall(data)
     initSteps(data)
+    initBall(data)
+    
 
     data.screen = pygame.display.get_surface()
     data.background = pygame.Surface(data.screen.get_size())
@@ -258,12 +249,10 @@ def init(data):
 
 def run():
     pygame.init()
-    # Not given the Canvas class
     class Struct: pass
     data = Struct()
     # Initialize screen
-    data.width = 350
-    data.height = 550
+    (data.width, data.height) = (350, 550)
     data.screenSize = (data.width, data.height)
     data.screen = pygame.display.set_mode(data.screenSize)
     pygame.display.set_caption("Window")
