@@ -134,7 +134,6 @@ def createRandStep(data):
     # Minimum distance between two steps on top of each other
     data.spaceY = int(data.ballWidth * 1.75)
     data.spaceX = int(data.ballWidth * 1.25)
-    red = data.redColor
     
     # There should at most be 3 steps in each row
     numHoles = random.randint(1, 2)
@@ -156,11 +155,13 @@ def trySpawnNewStep(data):
         createRandStep(data)
 
 
-def speedUpSteps(data):
+def changeLevel(data):
     data.timeElapsed += data.clock.tick(data.FPS)
     if (data.timeElapsed > data.timeForLevelChange):
         print "new level!"
-        data.FPS += 10
+        data.FPS += 20
+        data.level += 1
+        data.timeElapsed = 0
         data.timeElapsed = 0
 
 def mousePressed(event, data):
@@ -194,15 +195,24 @@ def win(data):
                 pygame.quit()
                 data.mode = "Done"
 
+def drawScore(data):
+    fontHeight = 25
+    scoreFont = pygame.font.Font("Font/Level_Score.ttf", fontHeight)
+    label = scoreFont.render("Score: %d" % (data.score), 1, data.whiteText) 
+    data.screen.blit(label, (0, 0))
 
 
 def updateScore(data):
-    data.timeElapsed += data.clock.tick(data.FPS)
-    if (data.timeElapsed > data.timeToChangeScore):
+    data.timeElapsedScore += data.clock.tick(data.FPS)
+    if (data.timeElapsedScore > data.timeToChangeScore):
         data.score += 1
-        data.timeElapsed = 0
-    
+        data.timeElapsedScore = 0
 
+def drawLevel(data):
+    fontHeight = 25
+    levelFont = pygame.font.Font("Font/Level_Score.ttf", fontHeight)
+    label = levelFont.render("Level: %d" %(data.level), 1, data.whiteText)
+    data.screen.blit(label, (data.width*.8, 0))
   
 def timerFired(data):
     redrawAll(data)
@@ -210,7 +220,8 @@ def timerFired(data):
     data.mousePos = pygame.mouse.get_pos()
     data.ball.addGravity(data)
     data.ball.ballStepsColl(data)
-    speedUpSteps(data)
+    changeLevel(data)
+    updateScore(data)
     
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
@@ -226,6 +237,8 @@ def redrawAll(data):
     data.screen.blit(data.background, (0, 0))
     data.ballSprite.draw(data.screen)
     data.stepsList.draw(data.screen)
+    drawScore(data)
+    drawLevel(data)
     updateSteps(data)
     trySpawnNewStep(data)
     
@@ -236,6 +249,7 @@ def initSteps(data):
     # Creating a sprites group for all the steps
     data.stepsList = pygame.sprite.Group()
     data.lowest = 0
+    data.whiteText = (255, 255, 255)
     data.redColor = (255, 0, 60)
     data.orangeColor = (255, 96, 0)
     data.yellowColor = (255, 192, 0)
@@ -255,9 +269,11 @@ def init(data):
     # Frames per second
     data.FPS = 30
     data.timeElapsed = 0
-    data.timeForLevelChange = 20000
-    data.timeToChangeScore = 500
+    data.timeElapsedScore = 0
+    data.timeForLevelChange = 15000
+    data.timeToChangeScore = 250
     data.score = 0
+    data.level = 1
     # Hides or shows the cursor by taking in a bool
     pygame.mouse.set_visible(0)
 
