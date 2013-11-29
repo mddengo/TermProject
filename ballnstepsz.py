@@ -33,13 +33,13 @@ class Ball(pygame.sprite.Sprite):
         # Call Sprite initializer
         pygame.sprite.Sprite.__init__(self)
         self.image, self.rect = load_image("crystal_sphere.png", -1)
-        self.speedx = 10
+        self.speedx = 19
         self.speedy = 0
         self.area = self.image.get_rect()
         self.width = self.area.width
         self.height = self.area.height
         self.loBound = self.rect.y + self.height
-        self.gravity = 20
+        self.gravity = 25
     
     # Moving the ball
     def moveLeft(self):
@@ -82,17 +82,16 @@ class Steps(pygame.sprite.Sprite):
 
 
 def oneHole(data):
-    ballWidth = data.ballWidth
     red = data.redColor
-    randHolePos = random.randint(data.ballWidth, data.width - ballWidth)
+    randHolePos = random.randint(data.spaceX, data.width - data.spaceX)
     
-    leftStepWidth = randHolePos - data.ballWidth/2
+    leftStepWidth = randHolePos - data.spaceX/2
     data.leftStep = Steps(leftStepWidth, data.stepHeight, red)
     data.leftStep.rect.x = 0 
     data.leftStep.rect.y = data.height
     data.stepsList.add(data.leftStep)
     
-    rightStepWidth = data.width - (randHolePos + data.ballWidth/2)
+    rightStepWidth = data.width - (randHolePos + data.spaceX/2)
     data.rightStep = Steps(rightStepWidth, data.stepHeight, red)
     # Sets each step on the right side of the screen
     data.rightStep.rect.x = data.width - rightStepWidth 
@@ -100,30 +99,29 @@ def oneHole(data):
     data.stepsList.add(data.rightStep)
 
 def twoHoles(data):
-    ballWidth = data.ballWidth
     red = data.redColor
-    randHolePos1 = random.randint(ballWidth, data.width/2)
+    randHolePos1 = random.randint(data.spaceX, data.width/2)
     # Create the left step according to where the first hole is
-    leftStepWidth = randHolePos1 - ballWidth/2
+    leftStepWidth = randHolePos1 - data.spaceX/2
     data.leftStep = Steps(leftStepWidth, data.stepHeight, red)
     # Position the step on the left edge of the screen
     data.leftStep.rect.x = 0 
     data.leftStep.rect.y = data.height
     data.stepsList.add(data.leftStep)
     
-    randHolePos2 = random.randint(data.width/2, data.width - ballWidth)
-    rightStepWidth = data.width - (randHolePos2 + ballWidth/2)
+    randHolePos2 = random.randint(data.width/2, data.width - data.spaceX)
+    rightStepWidth = data.width - (randHolePos2 + data.spaceX/2)
     data.rightStep = Steps(rightStepWidth, data.stepHeight, red)
     # Position the step on the right edge of the screen
     data.rightStep.rect.x = data.width - rightStepWidth
     data.rightStep.rect.y = data.height 
     data.stepsList.add(data.rightStep)
     
-    midStepWidth = data.width - (leftStepWidth + rightStepWidth + 2*data.ballWidth)
+    midStepWidth = data.width - (leftStepWidth + rightStepWidth + 2*data.spaceX)
     if (midStepWidth < 0):
         midStepWidth = 0
     data.midStep = Steps(midStepWidth, data.stepHeight, red)
-    data.midStep.rect.x = leftStepWidth + ballWidth
+    data.midStep.rect.x = leftStepWidth + data.spaceX
     data.midStep.rect.y = data.height
     data.stepsList.add(data.midStep)
 
@@ -131,11 +129,11 @@ def twoHoles(data):
 def createRandStep(data):
     data.ballWidth = 40
     # The width of each step needs to be random
-    #stepWidth = random.randint(ballWidth, data.width - ballWidth)
     data.stepHeight = 20
     (data.speedx, data.speedy) = (0, 5)
     # Minimum distance between two steps on top of each other
     data.spaceY = int(data.ballWidth * 1.75)
+    data.spaceX = int(data.ballWidth * 1.25)
     red = data.redColor
     
     # There should at most be 3 steps in each row
@@ -156,6 +154,14 @@ def trySpawnNewStep(data):
     data.lowest %= data.spaceY
     if (data.lowest == 0):
         createRandStep(data)
+
+
+def speedUpSteps(data):
+    data.timeElapsed += data.clock.tick(data.FPS)
+    if (data.timeElapsed > data.timeForLevelChange):
+        print "new level!"
+        data.FPS += 10
+        data.timeElapsed = 0
 
 def mousePressed(event, data):
     print "Mouse Pressed"
@@ -188,6 +194,15 @@ def win(data):
                 pygame.quit()
                 data.mode = "Done"
 
+
+
+def updateScore(data):
+    data.timeElapsed += data.clock.tick(data.FPS)
+    if (data.timeElapsed > data.timeToChangeScore):
+        data.score += 1
+        data.timeElapsed = 0
+    
+
   
 def timerFired(data):
     redrawAll(data)
@@ -195,6 +210,7 @@ def timerFired(data):
     data.mousePos = pygame.mouse.get_pos()
     data.ball.addGravity(data)
     data.ball.ballStepsColl(data)
+    speedUpSteps(data)
     
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
@@ -237,7 +253,11 @@ def initBall(data):
 def init(data):
     data.mode = "Running"
     # Frames per second
-    data.FPS = 20
+    data.FPS = 30
+    data.timeElapsed = 0
+    data.timeForLevelChange = 20000
+    data.timeToChangeScore = 500
+    data.score = 0
     # Hides or shows the cursor by taking in a bool
     pygame.mouse.set_visible(0)
 
