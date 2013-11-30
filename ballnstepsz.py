@@ -70,7 +70,19 @@ class Ball(pygame.sprite.Sprite):
             if (pygame.sprite.collide_rect(self, step) == True):
                 self.rect.y -= data.speedy
             else:
-                data.ball.addGravity(data) #?    
+                #data.ball.addGravity(data) #?
+                pass
+
+# Rotate an image around its center
+# I did NOT write this function!
+# Credits: http://stackoverflow.com/questions/4183208/how-do-i-rotate-an-image-around-its-center-using-pygame
+def rot_center(image, angle):
+    orig_rect = image.get_rect()
+    rot_image = pygame.transform.rotate(image, angle)
+    rot_rect = orig_rect.copy()
+    rot_rect.center = rot_image.get_rect().center
+    rot_image = rot_image.subsurface(rot_rect).copy()
+    return rot_image
 
 class Steps(pygame.sprite.Sprite):
     def __init__(self, width, height, color):
@@ -170,14 +182,17 @@ def mousePressed(event, data):
 
 def keyPressed(event, data):
     if (event.key == pygame.K_LEFT):    
-        data.ball.moveLeft()
+        if not data.paused:
+            data.ball.moveLeft()
+        
     elif (event.key == pygame.K_RIGHT):
-        data.ball.moveRight(data)
+        if not data.paused:
+            data.ball.moveRight(data)
     elif (event.key == pygame.K_p):
-        # pause the game
+        data.paused = not data.paused
         # takes player to pause screen
-        # if player presses 'p' again, resumes the game
-        pass
+
+        # if player presses 'p' again, resumes the game 
 
 def keyUnpressed(event, data):
     # If the keys are not being pressed, the ball stops moving
@@ -254,6 +269,9 @@ def initSteps(data):
     data.orangeColor = (255, 96, 0)
     data.yellowColor = (255, 192, 0)
     data.greenColor = (52, 224, 125)
+    data.blueColor = (0, 124, 229)
+    data.indigoColor = (41, 60, 240)
+    data.violetColor = (111, 57, 234)
     
     createRandStep(data)
     updateSteps(data)
@@ -278,10 +296,10 @@ def init(data):
     pygame.mouse.set_visible(0)
 
     data.keyHeld = False
+    data.paused = False
     
     initSteps(data)
     initBall(data)
-    
 
     data.screen = pygame.display.get_surface()
     data.background = pygame.Surface(data.screen.get_size())
@@ -303,7 +321,8 @@ def run():
     init(data)
     timerFired(data)
     while (data.mode != "Done"):
-        timerFired(data)
+        if not data.paused:
+            timerFired(data)
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
                 pygame.quit()
