@@ -62,8 +62,6 @@ class Ball(pygame.sprite.Sprite):
         if (self.loBound >= data.height):
             self.gravity = 0
 
-#if (data.ball.rect.top < 0):
-#    data.isGameOver = True
     def ballStepsColl(self, data):
         # make sure ball still moves along step
         for step in data.stepsList:
@@ -676,7 +674,9 @@ def keyUnpressed(event, data):
         data.ball.speedy = 0
 
 def gameOver(data):
-    if (data.level == 8):
+    if (data.ball.rect.top <= 0):
+        win(data)
+    elif (data.level == 8):
         win(data)
 
 # Check for win
@@ -716,6 +716,7 @@ def timerFired(data):
     changeLevel(data)
     updateScore(data)
     gameOver(data)
+    
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
             pygame.quit()
