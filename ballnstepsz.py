@@ -2,7 +2,7 @@
 
 
 # Import modules:
-import os, sys, math, random
+import os, sys, random
 import pygame
 from pygame.locals import *
 
@@ -58,9 +58,9 @@ class Ball(pygame.sprite.Sprite):
     def addGravity(self, data):
         self.loBound += self.gravity
         self.rect = self.rect.move(0, self.gravity)
+        # Let the ball rest at the bottom of the screen
         if (self.loBound >= data.height):
             self.gravity = 0
-        # if the ball isn't touching any of the steps add gravity 
 
 #if (data.ball.rect.top < 0):
 #    data.isGameOver = True
@@ -68,10 +68,12 @@ class Ball(pygame.sprite.Sprite):
         # make sure ball still moves along step
         for step in data.stepsList:
             if (pygame.sprite.collide_rect(self, step) == True):
-                self.rect.y -= data.speedy
+                #self.rect.y -= data.speedy
+                self.rect = self.rect.move(0, -data.speedy)
             else:
-                #data.ball.addGravity(data) #?
-                pass
+                data.ball.addGravity(data)  
+                #self.rect = self.rect.move(0, self.gravity)
+                
 
 # Rotate an image around its center
 # I did NOT write this function!
@@ -92,8 +94,10 @@ class Steps(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.image.fill(color)
 
-
-def oneHole(data):
+#############
+# RED STEPS #
+#############
+def oneHoleRed(data):
     red = data.redColor
     randHolePos = random.randint(data.spaceX, data.width - data.spaceX)
     
@@ -110,7 +114,7 @@ def oneHole(data):
     data.rightStep.rect.y = data.height 
     data.stepsList.add(data.rightStep)
 
-def twoHoles(data):
+def twoHolesRed(data):
     red = data.redColor
     randHolePos1 = random.randint(data.spaceX, data.width/2)
     # Create the left step according to where the first hole is
@@ -137,8 +141,7 @@ def twoHoles(data):
     data.midStep.rect.y = data.height
     data.stepsList.add(data.midStep)
 
-
-def createRandStep(data):
+def createRandRedStep(data):
     data.ballWidth = 40
     # The width of each step needs to be random
     data.stepHeight = 20
@@ -150,22 +153,496 @@ def createRandStep(data):
     # There should at most be 3 steps in each row
     numHoles = random.randint(1, 2)
     if (numHoles == 1):
-        oneHole(data)
+        oneHoleRed(data)
     else:
-        twoHoles(data)
+        twoHolesRed(data)
 
-def updateSteps(data):
+def updateRedSteps(data):
     for step in data.stepsList:
         step.rect.y -= data.speedy
         if (step.rect.y + data.stepHeight == 0):
             data.stepsList.remove(step)
 
-def trySpawnNewStep(data):
+def trySpawnNewRedStep(data):
     data.lowest += data.speedy
     data.lowest %= data.spaceY
     if (data.lowest == 0):
-        createRandStep(data)
+        createRandRedStep(data)
 
+#############
+#   ORANGE  #
+#############
+def oneHoleOrange(data):
+    orange = data.orangeColor
+    randHolePos = random.randint(data.spaceX, data.width - data.spaceX)
+    
+    leftStepWidth = randHolePos - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, orange)
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    rightStepWidth = data.width - (randHolePos + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, orange)
+    # Sets each step on the right side of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth 
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+
+def twoHolesOrange(data):
+    orange = data.orangeColor
+    randHolePos1 = random.randint(data.spaceX, data.width/2)
+    # Create the left step according to where the first hole is
+    leftStepWidth = randHolePos1 - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, orange)
+    # Position the step on the left edge of the screen
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    randHolePos2 = random.randint(data.width/2, data.width - data.spaceX)
+    rightStepWidth = data.width - (randHolePos2 + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, orange)
+    # Position the step on the right edge of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+    
+    midStepWidth = data.width - (leftStepWidth + rightStepWidth + 2*data.spaceX)
+    if (midStepWidth < 0):
+        midStepWidth = 0
+    data.midStep = Steps(midStepWidth, data.stepHeight, orange)
+    data.midStep.rect.x = leftStepWidth + data.spaceX
+    data.midStep.rect.y = data.height
+    data.stepsList.add(data.midStep)
+
+def createRandOrangeStep(data):
+    data.ballWidth = 40
+    # The width of each step needs to be random
+    data.stepHeight = 20
+    (data.speedx, data.speedy) = (0, 5)
+    # Minimum distance between two steps on top of each other
+    data.spaceY = int(data.ballWidth * 1.75)
+    data.spaceX = int(data.ballWidth * 1.25)
+    
+    # There should at most be 3 steps in each row
+    numHoles = random.randint(1, 2)
+    if (numHoles == 1):
+        oneHoleOrange(data)
+    else:
+        twoHolesOrange(data)
+
+def updateOrangeSteps(data):
+    for step in data.stepsList:
+        step.rect.y -= data.speedy
+        if (step.rect.y + data.stepHeight == 0):
+            data.stepsList.remove(step)
+
+def trySpawnNewOrangeStep(data):
+    data.lowest += data.speedy
+    data.lowest %= data.spaceY
+    if (data.lowest == 0):
+        createRandOrangeStep(data)
+
+
+#############
+#  YELLOW   #
+#############
+def oneHoleYell(data):
+    yellow = data.yellowColor
+    randHolePos = random.randint(data.spaceX, data.width - data.spaceX)
+    
+    leftStepWidth = randHolePos - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, yellow)
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    rightStepWidth = data.width - (randHolePos + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, yellow)
+    # Sets each step on the right side of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth 
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+
+def twoHolesYell(data):
+    yellow = data.yellowColor
+    randHolePos1 = random.randint(data.spaceX, data.width/2)
+    # Create the left step according to where the first hole is
+    leftStepWidth = randHolePos1 - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, yellow)
+    # Position the step on the left edge of the screen
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    randHolePos2 = random.randint(data.width/2, data.width - data.spaceX)
+    rightStepWidth = data.width - (randHolePos2 + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, yellow)
+    # Position the step on the right edge of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+    
+    midStepWidth = data.width - (leftStepWidth + rightStepWidth + 2*data.spaceX)
+    if (midStepWidth < 0):
+        midStepWidth = 0
+    data.midStep = Steps(midStepWidth, data.stepHeight, yellow)
+    data.midStep.rect.x = leftStepWidth + data.spaceX
+    data.midStep.rect.y = data.height
+    data.stepsList.add(data.midStep)
+
+def createRandYellowStep(data):
+    data.ballWidth = 40
+    # The width of each step needs to be random
+    data.stepHeight = 20
+    (data.speedx, data.speedy) = (0, 5)
+    # Minimum distance between two steps on top of each other
+    data.spaceY = int(data.ballWidth * 1.75)
+    data.spaceX = int(data.ballWidth * 1.25)
+    
+    # There should at most be 3 steps in each row
+    numHoles = random.randint(1, 2)
+    if (numHoles == 1):
+        oneHoleYell(data)
+    else:
+        twoHolesYell(data)
+
+def updateYellowSteps(data):
+    for step in data.stepsList:
+        step.rect.y -= data.speedy
+        if (step.rect.y + data.stepHeight == 0):
+            data.stepsList.remove(step)
+
+def trySpawnNewYellowStep(data):
+    data.lowest += data.speedy
+    data.lowest %= data.spaceY
+    if (data.lowest == 0):
+        createRandYellowStep(data)
+
+#############
+#   GREEN   #
+#############
+
+def oneHoleGreen(data):
+    green = data.greenColor
+    randHolePos = random.randint(data.spaceX, data.width - data.spaceX)
+    
+    leftStepWidth = randHolePos - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, green)
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    rightStepWidth = data.width - (randHolePos + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, green)
+    # Sets each step on the right side of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth 
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+
+def twoHolesGreen(data):
+    green = data.greenColor
+    randHolePos1 = random.randint(data.spaceX, data.width/2)
+    # Create the left step according to where the first hole is
+    leftStepWidth = randHolePos1 - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, green)
+    # Position the step on the left edge of the screen
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    randHolePos2 = random.randint(data.width/2, data.width - data.spaceX)
+    rightStepWidth = data.width - (randHolePos2 + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, green)
+    # Position the step on the right edge of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+    
+    midStepWidth = data.width - (leftStepWidth + rightStepWidth + 2*data.spaceX)
+    if (midStepWidth < 0):
+        midStepWidth = 0
+    data.midStep = Steps(midStepWidth, data.stepHeight, green)
+    data.midStep.rect.x = leftStepWidth + data.spaceX
+    data.midStep.rect.y = data.height
+    data.stepsList.add(data.midStep)
+
+def createRandGreenStep(data):
+    data.ballWidth = 40
+    # The width of each step needs to be random
+    data.stepHeight = 20
+    (data.speedx, data.speedy) = (0, 5)
+    # Minimum distance between two steps on top of each other
+    data.spaceY = int(data.ballWidth * 1.75)
+    data.spaceX = int(data.ballWidth * 1.25)
+    
+    # There should at most be 3 steps in each row
+    numHoles = random.randint(1, 2)
+    if (numHoles == 1):
+        oneHoleGreen(data)
+    else:
+        twoHolesGreen(data)
+
+def updateGreenSteps(data):
+    for step in data.stepsList:
+        step.rect.y -= data.speedy
+        if (step.rect.y + data.stepHeight == 0):
+            data.stepsList.remove(step)
+
+def trySpawnNewGreenStep(data):
+    data.lowest += data.speedy
+    data.lowest %= data.spaceY
+    if (data.lowest == 0):
+        createRandGreenStep(data)
+
+#############
+#   BLUE    #
+#############
+def oneHoleBlue(data):
+    blue = data.blueColor
+    randHolePos = random.randint(data.spaceX, data.width - data.spaceX)
+    
+    leftStepWidth = randHolePos - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, blue)
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    rightStepWidth = data.width - (randHolePos + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, blue)
+    # Sets each step on the right side of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth 
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+
+def twoHolesBlue(data):
+    blue = data.blueColor
+    randHolePos1 = random.randint(data.spaceX, data.width/2)
+    # Create the left step according to where the first hole is
+    leftStepWidth = randHolePos1 - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, blue)
+    # Position the step on the left edge of the screen
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    randHolePos2 = random.randint(data.width/2, data.width - data.spaceX)
+    rightStepWidth = data.width - (randHolePos2 + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, blue)
+    # Position the step on the right edge of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+    
+    midStepWidth = data.width - (leftStepWidth + rightStepWidth + 2*data.spaceX)
+    if (midStepWidth < 0):
+        midStepWidth = 0
+    data.midStep = Steps(midStepWidth, data.stepHeight, blue)
+    data.midStep.rect.x = leftStepWidth + data.spaceX
+    data.midStep.rect.y = data.height
+    data.stepsList.add(data.midStep)
+
+def createRandBlueStep(data):
+    data.ballWidth = 40
+    # The width of each step needs to be random
+    data.stepHeight = 20
+    (data.speedx, data.speedy) = (0, 5)
+    # Minimum distance between two steps on top of each other
+    data.spaceY = int(data.ballWidth * 1.75)
+    data.spaceX = int(data.ballWidth * 1.25)
+    
+    # There should at most be 3 steps in each row
+    numHoles = random.randint(1, 2)
+    if (numHoles == 1):
+        oneHoleBlue(data)
+    else:
+        twoHolesBlue(data)
+
+def updateBlueSteps(data):
+    for step in data.stepsList:
+        step.rect.y -= data.speedy
+        if (step.rect.y + data.stepHeight == 0):
+            data.stepsList.remove(step)
+
+def trySpawnNewBlueStep(data):
+    data.lowest += data.speedy
+    data.lowest %= data.spaceY
+    if (data.lowest == 0):
+        createRandBlueStep(data)
+
+#############
+#  INDIGO   #
+#############
+def oneHoleIndigo(data):
+    indigo = data.indigoColor
+    randHolePos = random.randint(data.spaceX, data.width - data.spaceX)
+    
+    leftStepWidth = randHolePos - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, indigo)
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    rightStepWidth = data.width - (randHolePos + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, indigo)
+    # Sets each step on the right side of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth 
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+
+def twoHolesIndigo(data):
+    indigo = data.indigoColor
+    randHolePos1 = random.randint(data.spaceX, data.width/2)
+    # Create the left step according to where the first hole is
+    leftStepWidth = randHolePos1 - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, indigo)
+    # Position the step on the left edge of the screen
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    randHolePos2 = random.randint(data.width/2, data.width - data.spaceX)
+    rightStepWidth = data.width - (randHolePos2 + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, indigo)
+    # Position the step on the right edge of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+    
+    midStepWidth = data.width - (leftStepWidth + rightStepWidth + 2*data.spaceX)
+    if (midStepWidth < 0):
+        midStepWidth = 0
+    data.midStep = Steps(midStepWidth, data.stepHeight, indigo)
+    data.midStep.rect.x = leftStepWidth + data.spaceX
+    data.midStep.rect.y = data.height
+    data.stepsList.add(data.midStep)
+
+def createRandIndyStep(data):
+    data.ballWidth = 40
+    # The width of each step needs to be random
+    data.stepHeight = 20
+    (data.speedx, data.speedy) = (0, 5)
+    # Minimum distance between two steps on top of each other
+    data.spaceY = int(data.ballWidth * 1.75)
+    data.spaceX = int(data.ballWidth * 1.25)
+    
+    # There should at most be 3 steps in each row
+    numHoles = random.randint(1, 2)
+    if (numHoles == 1):
+        oneHoleIndigo(data)
+    else:
+        twoHolesIndigo(data)
+
+def updateIndySteps(data):
+    for step in data.stepsList:
+        step.rect.y -= data.speedy
+        if (step.rect.y + data.stepHeight == 0):
+            data.stepsList.remove(step)
+
+def trySpawnNewIndyStep(data):
+    data.lowest += data.speedy
+    data.lowest %= data.spaceY
+    if (data.lowest == 0):
+        createRandIndyStep(data)
+
+#############
+#   VIOLET  #
+#############
+def oneHoleViolet(data):
+    violet = data.violetColor
+    randHolePos = random.randint(data.spaceX, data.width - data.spaceX)
+    
+    leftStepWidth = randHolePos - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, violet)
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    rightStepWidth = data.width - (randHolePos + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, violet)
+    # Sets each step on the right side of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth 
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+
+def twoHolesViolet(data):
+    violet = data.violetColor
+    randHolePos1 = random.randint(data.spaceX, data.width/2)
+    # Create the left step according to where the first hole is
+    leftStepWidth = randHolePos1 - data.spaceX/2
+    data.leftStep = Steps(leftStepWidth, data.stepHeight, violet)
+    # Position the step on the left edge of the screen
+    data.leftStep.rect.x = 0 
+    data.leftStep.rect.y = data.height
+    data.stepsList.add(data.leftStep)
+    
+    randHolePos2 = random.randint(data.width/2, data.width - data.spaceX)
+    rightStepWidth = data.width - (randHolePos2 + data.spaceX/2)
+    data.rightStep = Steps(rightStepWidth, data.stepHeight, violet)
+    # Position the step on the right edge of the screen
+    data.rightStep.rect.x = data.width - rightStepWidth
+    data.rightStep.rect.y = data.height 
+    data.stepsList.add(data.rightStep)
+    
+    midStepWidth = data.width - (leftStepWidth + rightStepWidth + 2*data.spaceX)
+    if (midStepWidth < 0):
+        midStepWidth = 0
+    data.midStep = Steps(midStepWidth, data.stepHeight, violet)
+    data.midStep.rect.x = leftStepWidth + data.spaceX
+    data.midStep.rect.y = data.height
+    data.stepsList.add(data.midStep)
+
+def createRandVioletStep(data):
+    data.ballWidth = 40
+    # The width of each step needs to be random
+    data.stepHeight = 20
+    (data.speedx, data.speedy) = (0, 5)
+    # Minimum distance between two steps on top of each other
+    data.spaceY = int(data.ballWidth * 1.75)
+    data.spaceX = int(data.ballWidth * 1.25)
+    
+    # There should at most be 3 steps in each row
+    numHoles = random.randint(1, 2)
+    if (numHoles == 1):
+        oneHoleViolet(data)
+    else:
+        twoHolesViolet(data)
+
+def updateVioletSteps(data):
+    for step in data.stepsList:
+        step.rect.y -= data.speedy
+        if (step.rect.y + data.stepHeight == 0):
+            data.stepsList.remove(step)
+
+def trySpawnNewVioletStep(data):
+    data.lowest += data.speedy
+    data.lowest %= data.spaceY
+    if (data.lowest == 0):
+        createRandVioletStep(data)
+
+def changeColor(data):
+    if (data.level == 1):
+        updateRedSteps(data)
+        trySpawnNewRedStep(data)
+    elif (data.level == 2):
+        updateOrangeSteps(data)
+        trySpawnNewOrangeStep(data)
+    elif (data.level == 3):
+        updateYellowSteps(data)
+        trySpawnNewYellowStep(data)
+    elif (data.level == 4):
+        updateGreenSteps(data)
+        trySpawnNewGreenStep(data)
+    elif (data.level == 5):
+        updateBlueSteps(data)
+        trySpawnNewBlueStep(data)
+    elif(data.level == 6):
+        updateIndySteps(data)
+        trySpawnNewIndyStep(data)
+    else:
+        updateVioletSteps(data)
+        trySpawnNewVioletStep(data)
 
 def changeLevel(data):
     data.timeElapsed += data.clock.tick(data.FPS)
@@ -190,15 +667,17 @@ def keyPressed(event, data):
             data.ball.moveRight(data)
     elif (event.key == pygame.K_p):
         data.paused = not data.paused
-        # takes player to pause screen
-
-        # if player presses 'p' again, resumes the game 
+        # takes player to pause screen 
 
 def keyUnpressed(event, data):
     # If the keys are not being pressed, the ball stops moving
     if (event.key == K_LEFT) or (event.key == K_DOWN):
         data.ball.speedx = 0
         data.ball.speedy = 0
+
+def gameOver(data):
+    if (data.level == 8):
+        win(data)
 
 # Check for win
 def win(data):
@@ -215,7 +694,6 @@ def drawScore(data):
     scoreFont = pygame.font.Font("Font/Level_Score.ttf", fontHeight)
     label = scoreFont.render("Score: %d" % (data.score), 1, data.whiteText) 
     data.screen.blit(label, (0, 0))
-
 
 def updateScore(data):
     data.timeElapsedScore += data.clock.tick(data.FPS)
@@ -237,7 +715,7 @@ def timerFired(data):
     data.ball.ballStepsColl(data)
     changeLevel(data)
     updateScore(data)
-    
+    gameOver(data)
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
             pygame.quit()
@@ -254,8 +732,7 @@ def redrawAll(data):
     data.stepsList.draw(data.screen)
     drawScore(data)
     drawLevel(data)
-    updateSteps(data)
-    trySpawnNewStep(data)
+    changeColor(data)
     
     pygame.display.update()
     pygame.display.flip()
@@ -273,8 +750,8 @@ def initSteps(data):
     data.indigoColor = (41, 60, 240)
     data.violetColor = (111, 57, 234)
     
-    createRandStep(data)
-    updateSteps(data)
+    createRandRedStep(data)
+    updateRedSteps(data)
     
 def initBall(data):
     data.ball = Ball()
@@ -282,25 +759,27 @@ def initBall(data):
     data.ball.moveRight(data)
     data.ball.addGravity(data)
 
-def init(data):
-    data.mode = "Running"
-    # Frames per second
-    data.FPS = 30
+def initTimes(data):
     data.timeElapsed = 0
     data.timeElapsedScore = 0
     data.timeForLevelChange = 15000
     data.timeToChangeScore = 250
+
+def init(data):
+    data.mode = "Running"
+    # Frames per second
+    data.FPS = 30 
     data.score = 0
     data.level = 1
     # Hides or shows the cursor by taking in a bool
     pygame.mouse.set_visible(0)
-
     data.keyHeld = False
     data.paused = False
-    
+
+    initTimes(data)
     initSteps(data)
     initBall(data)
-
+    
     data.screen = pygame.display.get_surface()
     data.background = pygame.Surface(data.screen.get_size())
     data.background = data.background.convert()
@@ -315,7 +794,7 @@ def run():
     (data.width, data.height) = (350, 500)
     data.screenSize = (data.width, data.height)
     data.screen = pygame.display.set_mode(data.screenSize)
-    pygame.display.set_caption("Window")
+    pygame.display.set_caption("FallDown!")
     # Initialize clock
     data.clock = pygame.time.Clock()
     init(data)
@@ -330,10 +809,8 @@ def run():
             elif (event.type == pygame.MOUSEBUTTONDOWN):
                 mousePressed(event, data)
             elif (event.type == pygame.KEYDOWN):
-                data.keyHeld = True
                 keyPressed(event, data)
             elif (event.type == pygame.KEYUP):
-                data.keyHeld = False
                 keyUnpressed(event, data)
 
 run()
