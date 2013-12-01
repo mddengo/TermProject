@@ -68,6 +68,8 @@ class Ball(pygame.sprite.Sprite):
             if (pygame.sprite.collide_rect(self, step) == True):
                 #self.rect.y -= data.speedy
                 self.rect = self.rect.move(0, -data.speedy)
+                # how to only play once? lool
+                # data.bounceSound.play()
             else:
                 data.ball.addGravity(data)  
                 #self.rect = self.rect.move(0, self.gravity)
@@ -675,14 +677,16 @@ def keyUnpressed(event, data):
 
 def gameOver(data):
     if (data.ball.rect.top <= 0):
+        data.ballDiesSound.play()
         win(data)
-    elif (data.level == 8):
+    if (data.level == 8):
         win(data)
 
 # Check for win
 def win(data):
     data.mode = "Done"
     # win screen, etc.
+    # pygame.display.flip()
     while True:
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -716,7 +720,7 @@ def timerFired(data):
     changeLevel(data)
     updateScore(data)
     gameOver(data)
-    
+
     for event in pygame.event.get():
         if (event.type == pygame.QUIT):
             pygame.quit()
@@ -737,6 +741,18 @@ def redrawAll(data):
     
     pygame.display.update()
     pygame.display.flip()
+
+def initSounds(data):
+    data.themeSound = pygame.mixer.Sound("Sounds/fallDown.wav")
+    data.bounceSound = pygame.mixer.Sound("Sounds/fx/ballbounce.wav")
+    data.chachingSound = pygame.mixer.Sound("Sounds/fx/chaching.wav")
+    data.freezeSound = pygame.mixer.Sound("Sounds/fx/freeze.wav")
+    data.enemyKilledSound = pygame.mixer.Sound("Sounds/fx/pewpew.wav")
+    data.ballDiesSound = pygame.mixer.Sound("Sounds/fx/squish.wav")
+    data.ballSpeedsUpSound = pygame.mixer.Sound("Sounds/fx/zoom.wav")
+
+    # Loops through theme song forever
+    data.themeSound.play(-1)
 
 def initSteps(data):
     # Creating a sprites group for all the steps
@@ -780,6 +796,7 @@ def init(data):
     initTimes(data)
     initSteps(data)
     initBall(data)
+    initSounds(data)
     
     data.screen = pygame.display.get_surface()
     data.background = pygame.Surface(data.screen.get_size())
