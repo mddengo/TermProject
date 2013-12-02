@@ -1,5 +1,5 @@
 # Michelle Deng
-
+# fallDown.py
 
 # Import modules:
 import os, sys, random
@@ -54,26 +54,38 @@ class Ball(pygame.sprite.Sprite):
         else:
             print "no move right"
 
-    # Add gravity so ball falls down to the next step
-    def addGravity(self, data):
-        self.loBound += self.gravity
-        self.rect = self.rect.move(0, self.gravity)
-        # Let the ball rest at the bottom of the screen
+    def stop(self, data):
+        # Let ball rest at the bottom of the screen
         if (self.loBound >= data.height):
             self.gravity = 0
 
+    # Add gravity so ball falls down to the next step
+    # def addGravity(self, data):
+    #     self.loBound += self.gravity
+    #     self.rect = self.rect.move(0, self.gravity)
+    #     # Let the ball rest at the bottom of the screen
+    #     if (self.loBound >= data.height):
+    #         self.gravity = 0
+
     def ballStepsColl(self, data):
         # make sure ball still moves along step
+        isColliding = False
+        #self.addGravity(data)
         for step in data.stepsList:
-            if (pygame.sprite.collide_rect(self, step) == True):
+            if (len(step.rect.collidelistall([self])) > 0):
                 #self.rect.y -= data.speedy
-                self.rect = self.rect.move(0, -data.speedy)
-                # how to only play once? lool
-                # data.bounceSound.play()
-            else:
-                data.ball.addGravity(data)  
-                #self.rect = self.rect.move(0, self.gravity)
-                
+                isColliding = True
+                # how to only play once? lool;
+                #data.bounceSound.play()
+        if (isColliding):
+            if (self.loBound >= data.height):
+                self.gravity = 0
+            self.rect = self.rect.move(0, -data.speedy)
+            
+        else:
+            self.rect = self.rect.move(0, self.gravity)
+
+               
 
 # Rotate an image around its center
 # I did NOT write this function!
@@ -715,7 +727,8 @@ def timerFired(data):
     redrawAll(data)
     data.clock.tick(data.FPS)
     data.mousePos = pygame.mouse.get_pos()
-    data.ball.addGravity(data)
+    #data.ball.addGravity(data)
+    data.ball.stop(data)
     data.ball.ballStepsColl(data)
     changeLevel(data)
     updateScore(data)
@@ -774,13 +787,23 @@ def initBall(data):
     data.ball = Ball()
     data.ballSprite = pygame.sprite.RenderPlain(data.ball)
     data.ball.moveRight(data)
-    data.ball.addGravity(data)
+    #data.ball.addGravity(data)
 
 def initTimes(data):
     data.timeElapsed = 0
     data.timeElapsedScore = 0
     data.timeForLevelChange = 15000
     data.timeToChangeScore = 250
+
+def initBackground(data):
+    data.screen = pygame.display.get_surface()
+    # data.background = load_image("menusplash.png", -1)
+    # data.background = pygame.Surface(data.screenSize)
+    # data.background = pygame.transform.smoothscale(data.background, data.screenSize)
+    
+    data.background = pygame.Surface(data.screen.get_size())
+    data.background = data.background.convert()
+    data.background.fill((0, 0, 0))
 
 def init(data):
     data.mode = "Running"
@@ -797,12 +820,8 @@ def init(data):
     initSteps(data)
     initBall(data)
     initSounds(data)
+    initBackground(data)
     
-    data.screen = pygame.display.get_surface()
-    data.background = pygame.Surface(data.screen.get_size())
-    data.background = data.background.convert()
-    data.background.fill((0, 0, 0))
-
 
 def run():
     pygame.init()
