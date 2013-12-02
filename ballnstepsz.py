@@ -48,24 +48,11 @@ class Ball(pygame.sprite.Sprite):
         else:
             print "no move left"
     def moveRight(self, data):
-        data.margin = 3
-        if (self.rect.x + self.width + data.margin < data.width):    
+        margin = 3
+        if (self.rect.x + self.width + margin < data.width):    
             self.rect = self.rect.move(self.speedx, self.speedy)
         else:
             print "no move right"
-
-    def stop(self, data):
-        # Let ball rest at the bottom of the screen
-        if (self.loBound >= data.height):
-            self.gravity = 0
-
-    # Add gravity so ball falls down to the next step
-    # def addGravity(self, data):
-    #     self.loBound += self.gravity
-    #     self.rect = self.rect.move(0, self.gravity)
-    #     # Let the ball rest at the bottom of the screen
-    #     if (self.loBound >= data.height):
-    #         self.gravity = 0
 
     def ballStepsColl(self, data):
         # make sure ball still moves along step
@@ -78,14 +65,44 @@ class Ball(pygame.sprite.Sprite):
                 # how to only play once? lool;
                 #data.bounceSound.play()
         if (isColliding):
-            if (self.loBound >= data.height):
-                self.gravity = 0
             self.rect = self.rect.move(0, -data.speedy)
-            
+        elif (self.rect.y > (data.height - self.height)):
+                pass   
         else:
             self.rect = self.rect.move(0, self.gravity)
 
-               
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        # Call Sprite initializer
+        pygame.sprite.Sprite.__init__(self)
+        self.image, self.rect = load_image("enemy.png", -1)
+        self.speedx = 14
+        self.speedy = 0
+        self.area = self.image.get_rect()
+        self.width = self.area.width
+        self.height = self.area.height
+        self.loBound = self.rect.y + self.height
+        self.gravity = 25
+    def movingLeft(self, data):
+        #if (self.rect.x != 0):
+        self.rect = self.rect.move(-self.speedx, self.speedy)
+        if (self.rect.x <= 0):
+            self.rect = self.rect.move(self.speedx, self.speedy)
+    def movingRight(self, data):
+        #if (self.rect.x + self.width < data.width):
+        self.rect = self.rect.move(self.speedx, self.speedy)
+        if (self.rect.x + self.width < data.width):
+            self.rect = self.rect.move(-self.speedx, self.speedy)
+    def enemyCollSteps(self, data):
+        isColliding = False
+        for step in data.stepsList:
+            if (len(step.rect.collidelistall([self])) > 0):
+                isColliding = True
+        if (isColliding):
+            self.rect = self.rect.move(0, -data.speedy)
+        else:
+            self.rect = self.rect.move(0, self.gravity)
+
 
 # Rotate an image around its center
 # I did NOT write this function!
@@ -728,8 +745,10 @@ def timerFired(data):
     data.clock.tick(data.FPS)
     data.mousePos = pygame.mouse.get_pos()
     #data.ball.addGravity(data)
-    data.ball.stop(data)
     data.ball.ballStepsColl(data)
+    data.enemy.movingLeft(data)
+    data.enemy.movingRight(data)
+    data.enemy.enemyCollSteps(data)
     changeLevel(data)
     updateScore(data)
     gameOver(data)
@@ -748,6 +767,7 @@ def redrawAll(data):
     data.screen.blit(data.background, (0, 0))
     data.ballSprite.draw(data.screen)
     data.stepsList.draw(data.screen)
+    data.enemySprite.draw(data.screen)
     drawScore(data)
     drawLevel(data)
     changeColor(data)
@@ -788,6 +808,9 @@ def initBall(data):
     data.ballSprite = pygame.sprite.RenderPlain(data.ball)
     data.ball.moveRight(data)
     #data.ball.addGravity(data)
+def initEnemy(data):
+    data.enemy = Enemy()
+    data.enemySprite = pygame.sprite.RenderPlain(data.enemy)
 
 def initTimes(data):
     data.timeElapsed = 0
@@ -819,6 +842,7 @@ def init(data):
     initTimes(data)
     initSteps(data)
     initBall(data)
+    initEnemy(data)
     initSounds(data)
     initBackground(data)
     
