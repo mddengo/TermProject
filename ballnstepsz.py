@@ -27,6 +27,321 @@ def load_image(name, colorkey = None):
         image.set_colorkey(colorkey, RLEACCEL)
     return image, image.get_rect()
 
+class Screens(object):
+    def __init__(self):
+        # Draws screens and buttons
+        pass
+    def draw(self, screen, screenWidth, screenHeight, image):
+        image = pygame.transform.smoothscale(image, (screenWidth,screenHeight))
+        screen.blit(image, (0,0))
+    
+# Draws menu splash screen with buttons   
+class menuScreen(Screens):
+    def __init__(self, screenWidth, screenHeight):
+        iconMaxWidth = 275
+        iconMaxHeight = 150
+        
+        self.buttonPressed = False
+        
+        self.menuPlayPressed = load_image("menuplay_pressed.png", -1)
+        self.menuTut = load_image("menututTxt.png", -1)
+        self.menuTutPressed = load_image("menutut_pressed.png", -1)
+        self.menuCreds = load_image("menucredsTxt.png", -1)
+        self.menuCredsPressed = load_image("menucreds_pressed.png", -1)
+        self.menuSplash = load_image("menusplashwtitle.png")
+        
+        self.iconWidth = int(0.4 * screenWidth)
+        self.iconHeight = int(0.2 * screenHeight)
+        self.iconSize = (self.iconWidth, self.iconHeight)
+
+        if (self.iconWidth > iconMaxWidth):
+            self.iconWidth = iconMaxWidth
+        if (self.iconHeight > iconMaxHeight):
+            self.iconHeight = iconMaxHeight
+        
+        # Scale icons
+        self.menuPlay = pygame.transform.smoothscale(self.menuPlay,
+                                                     self.iconSize)
+        self.menuTut = pygame.transform.smoothscale(self.menuTut, self.iconSize)
+        self.menuCreds = pygame.transform.smoothscale(self.menuCreds,
+                                                      self.iconSize)
+        # Scale pressed icons
+        self.menuPlayPressed = pygame.transform.smoothscale(self.menuPlayPressed,
+                                                            self.iconSize)
+        self.menuTutPressed = pygame.transform.smoothscale(self.menuTutPressed,
+                                                           self.iconSize)
+        self.menuCredsPressed = pygame.transform.smoothscale(self.menuCredsPressed,
+                                                             self.iconSize)
+
+    def draw(self, screen, screenWidth, screenHeight):
+        pygame.mouse.set_visible(1)
+        # Draw menu screen
+        Screens().draw(screen, screenWidth, screenHeight, self.menuSplash)
+        
+        # Position buttons
+        playPos = (int(0.5 * screenWidth), int(0.35 * screenHeight))
+        tutPos = (int(0.5 * screenWidth),
+                  int(0.35 * screenHeight + 1.25 * self.iconHeight))
+        credsPos = (int(0.5 * screenWidth),
+                    int(0.70 * screenHeight + 0.25 * self.iconHeight))
+        
+        # Show pressed state when button is clicked
+        if not(self.buttonPressed):
+            screen.blit(self.menuPlay, playPos)
+            screen.blit(self.menuTut, tutPos)
+            screen.blit(self.menuCreds, credsPos)
+        else:
+            screen.blit(self.menuPlayPressed, playPos)
+            screen.blit(self.menuTutPressed, tutPos)
+            screen.blit(self.menuCredsPressed, credsPos)
+
+    def updateAll(self):
+        (mouseClickX, mouseClickY) = pygame.mouse.get_pos()
+        
+        # Store icon coordinates (top left & bottom right)
+        self.playCoords = [playPos, (playPos[0] + self.iconSize, pos[1] +
+                                     self.iconSize)]
+        self.tutCoords = [tutPos, (tutPos[0] + self.iconSize, pos[1] +
+                                   self.iconSize)]
+        self.credsCoords = [credsPos, (credsPos[0] + self.iconSize, pos[1] +
+                                       self.iconSize)]
+        
+        # Check if player clicks the icons
+        if ((mouseClickX < self.playCoords[1][0]) and
+            (mouseClickX > self.playCoords[0][0])):
+                if ((mouseClickY < self.playCoords[1][1]) and
+                    (mouseClickY > self.playCoords[0][1])):
+                    self.buttonPressed = True
+                    return
+        elif ((mouseClickX < self.tutCoords[1][0]) and
+            (mouseClickX > self.tutCoords[0][0])):
+            if ((mouseClickY < self.tutCoords[0][1])):
+                self.buttonPressed = True
+                return
+        elif ((mouseClickX < self.credsCoords[1][0]) and
+            (mouseClickX > self.credsCoords[0][0])):
+            if ((mouseCLickY < self.credsCoords[0][1])):
+                self.buttonPressed = True
+                return
+        self.buttonPressed = False
+        
+    def clicked(self):
+        return self.buttonPressed
+    
+class Paused(Screens):
+    def __init__(self):
+        self.pausedSplash = load_image("pausesplash.png", -1)
+
+    def draw(self, screen, screenWidth, screenHeight):
+        Screens().draw(screen, screenWidth, screenHeight, 0,
+                                 self.pausedSplash)
+
+class GameOver(Screens):
+    def __init__(self, screen, screenWidth, screenHeight):
+        self.ggScreen = load_image("ggsplash.png", -1)
+        iconMaxWidth = 275
+        iconMaxHeight = 150
+        
+        self.buttonPressed = False
+        self.menuPressed = load_image("menubutt-pressed.png", -1)
+        self.menuButt = load_image("menubutt.png", -1)
+        self.playPressed = load_image("menuplay_pressed.png", -1)
+        self.playButt = load_image("menuplayTxt.png", -1)
+
+        self.iconWidth = int(0.4 * screenWidth)
+        self.iconHeight = int(0.2 * screenHeight)
+        self.iconSize = (self.iconWidth, self.iconHeight)
+
+        if (self.iconWidth > iconMaxWidth):
+            self.iconWidth = iconMaxWidth
+        if (self.iconHeight > iconMaxHeight):
+            self.iconHeight = iconMaxHeight
+
+        # Scale icons
+        self.menuButt = pygame.transform.smoothscale(self.menuButt,
+                                                     self.iconSize)
+        self.playButt = pygame.transform.smoothscale(self.playButt,
+                                                     self.iconSize)
+        
+        # Scale pressed icons
+        self.menuPressed = pygame.transform.smoothscale(self.menuPressed,
+                                                            self.iconSize)
+        self.playPressed = pygame.transform.smoothscale(self.playPressed,
+                                                     self.iconSize)
+    def draw(self, screen, screenWidth, screenHeight):
+        pygame.mouse.set_visible(1)
+        Screens().draw(screen, screenWidth, screenHeight, self.credsScreen)
+        # Position buttons
+        menuPos = (int(0.25 * screenWidth), int(0.85 * screenHeight))
+        playPos = (int(0.75 * screenWidth), int(0.85 * screenHeight))
+        
+        # Show pressed state when button is clicked
+        if not(self.buttonPressed):
+            screen.blit(self.menuButt, menuPos)
+            screen.blit(self.playButt, playPos)
+        else:
+            screen.blit(self.menuPressed, menuPos)
+            screen.blit(self.playPressed, playPos)
+
+    def updateAll(self):
+        (mouseClickX, mouseClickY) = pygame.mouse.get_pos()
+        
+        # Store icon coordinates (top left & bottom right)
+        self.menuCoords = [menuPos, (menuPos[0] + self.iconSize, pos[1] +
+                                     self.iconSize)]
+        self.playCoords = [playPos, (playPos[0] + self.iconSize, pos[1] +
+                                    self.iconSize)]
+        
+        # Check if player clicks the icons
+        if ((mouseClickX < self.menuCoords[1][0]) and
+            (mouseClickX > self.menuCoords[0][0])):
+                if ((mouseClickY < self.menuCoords[1][1]) and
+                    (mouseClickY > self.menuCoords[0][1])):
+                    self.buttonPressed = True
+                    return
+        elif ((mouseClickX < self.playCoords[1][0]) and 
+            (mouseClickX > self.playCoords[0][0])):
+            if ((mouseClickY < self.playCoords[1][1]) and
+                (mouseClickY > self.playCoords[0][1])):
+                self.buttonPressed = True
+                return 
+        self.buttonPressed = False
+
+    def clicked(self):
+        return self.buttonPressed
+
+class Tutorial(Screens):
+    def __init__(self, screenWidth, screenHeight):
+        self.tutScreen = load_image("tutsplash.png", -1)
+        iconMaxWidth = 275
+        iconMaxHeight = 150
+        
+        self.buttonPressed = False
+        self.menuPressed = load_image("menubutt-pressed.png", -1)
+        self.menuButt = load_image("menubutt.png", -1)
+        self.playPressed = load_image("menuplay_pressed.png", -1)
+        self.playButt = load_image("menuplayTxt.png", -1)
+
+        self.iconWidth = int(0.5 * screenWidth)
+        self.iconHeight = int(0.2 * screenHeight)
+        self.iconSize = (self.iconWidth, self.iconHeight)
+
+        if (self.iconWidth > iconMaxWidth):
+            self.iconWidth = iconMaxWidth
+        if (self.iconHeight > iconMaxHeight):
+            self.iconHeight = iconMaxHeight
+
+        # Scale icons
+        self.menuButt = pygame.transform.smoothscale(self.menuButt,
+                                                     self.iconSize)
+        self.playButt = pygame.transform.smoothscale(self.playButt,
+                                                     self.iconSize)
+        
+        # Scale pressed icons
+        self.menuPressed = pygame.transform.smoothscale(self.menuPressed,
+                                                            self.iconSize)
+        self.playPressed = pygame.transform.smoothscale(self.playPressed,
+                                                     self.iconSize)
+
+    def draw(self, screen, screenWidth, screenHeight):
+        pygame.mouse.set_visible(1)
+        Screens().draw(screen, screenWidth, screenHeight, self.credsScreen)
+        # Position buttons
+        menuPos = (int(0.25 * screenWidth), int(0.9 * screenHeight))
+        playPos = (int(0.75 * screenWidth), int(0.9 * screenHeight))
+        
+        # Show pressed state when button is clicked
+        if not(self.buttonPressed):
+            screen.blit(self.menuButt, menuPos)
+            screen.blit(self.playButt, playPos)
+        else:
+            screen.blit(self.menuPressed, menuPos)
+            screen.blit(self.playPressed, playPos)
+
+    def updateAll(self):
+        (mouseClickX, mouseClickY) = pygame.mouse.get_pos()
+        
+        # Store icon coordinates (top left & bottom right)
+        self.menuCoords = [menuPos, (menuPos[0] + self.iconSize, pos[1] +
+                                     self.iconSize)]
+        self.playCoords = [playPos, (playPos[0] + self.iconSize, pos[1] +
+                                    self.iconSize)]
+        
+        # Check if player clicks the icons
+        if ((mouseClickX < self.menuCoords[1][0]) and
+            (mouseClickX > self.menuCoords[0][0])):
+                if ((mouseClickY < self.menuCoords[1][1]) and
+                    (mouseClickY > self.menuCoords[0][1])):
+                    self.buttonPressed = True
+                    return
+        elif ((mouseClickX < self.playCoords[1][0]) and 
+            (mouseClickX > self.playCoords[0][0])):
+            if ((mouseClickY < self.playCoords[1][1]) and
+                (mouseClickY > self.playCoords[0][1])):
+                self.buttonPressed = True
+                return 
+        self.buttonPressed = False
+
+    def clicked(self):
+        return self.buttonPressed
+    
+class Creds(Screens):
+    def __init__(self):
+        self.credsScreen = load_image("credssplash.png", -1)
+        iconMaxWidth = 275
+        iconMaxHeight = 150
+        
+        self.buttonPressed = False
+        self.menuPressed = load_image("menubutt-pressed.png", -1)
+        self.menuButt = load_image("menubutt.png", -1)
+        self.iconWidth = int(0.3 * screenWidth)
+        self.iconHeight = int(0.2 * screenHeight)
+        self.iconSize = (self.iconWidth, self.iconHeight)
+
+        if (self.iconWidth > iconMaxWidth):
+            self.iconWidth = iconMaxWidth
+        if (self.iconHeight > iconMaxHeight):
+            self.iconHeight = iconMaxHeight
+
+        # Scale icons
+        self.menuButt = pygame.transform.smoothscale(self.menuButt,
+                                                     self.iconSize)
+        # Scale pressed icons
+        self.menuPressed = pygame.transform.smoothscale(self.menuPressed,
+                                                            self.iconSize)
+
+    def draw(self, screen, screenWidth, screenHeight):
+        pygame.mouse.set_visible(1)
+        Screens().draw(screen, screenWidth, screenHeight, self.credsScreen)
+        
+        # Position buttons
+        menuPos = (int(0.50 * screenWidth), int(0.9 * screenHeight))
+        
+        # Show pressed state when button is clicked
+        if not(self.buttonPressed):
+            screen.blit(self.menuButt, menuPos)
+        else:
+            screen.blit(self.menuPressed, menuPos)
+
+    def update(self):
+        (mouseClickX, mouseClickY) = pygame.mouse.get_pos()
+        
+        # Store icon coordinates (top left & bottom right)
+        self.menuCoords = [menuPos, (menuPos[0] + self.iconSize, pos[1] +
+                                     self.iconSize)]
+        
+        # Check if player clicks the icons
+        if ((mouseClickX < self.menuCoords[1][0]) and
+            (mouseClickX > self.menuCoords[0][0])):
+                if ((mouseClickY < self.menuCoords[1][1]) and
+                    (mouseClickY > self.menuCoords[0][1])):
+                    self.buttonPressed = True
+                    return
+        self.buttonPressed = False
+
+    def clicked(self):
+        return self.buttonPressed
+
 # Create the ball
 class Ball(pygame.sprite.Sprite):
     def __init__(self):
@@ -58,57 +373,21 @@ class Ball(pygame.sprite.Sprite):
     def ballStepsColl(self, data):
         # make sure ball still moves along step
         isColliding = False
-        
         for step in data.stepsList:
             if (len(step.rect.collidelistall([self])) > 0):
                 #self.rect.y -= data.speedy
                 isColliding = True
-
         if (isColliding):
             self.rect = self.rect.move(0, -data.speedy)
             if not self.wasColliding:
                 data.bounceSound.play()
+                data.bounceSound.set_volume(0.55)
                 self.wasColliding = True
         elif (self.rect.y > (data.height - self.height)):
             pass   
         else:
             self.wasColliding = False
             self.rect = self.rect.move(0, self.gravity)
-
-class Enemy(pygame.sprite.Sprite):
-    def __init__(self):
-        # Call Sprite initializer
-        pygame.sprite.Sprite.__init__(self)
-        self.image, self.rect = load_image("enemy.png", -1)
-        self.speedx = 14
-        self.speedy = 0
-        self.area = self.image.get_rect()
-        self.width = self.area.width
-        self.height = self.area.height
-        self.loBound = self.rect.y + self.height
-        self.gravity = 25
-    def movingLeft(self, data):
-        #if (self.rect.x != 0):
-        self.rect = self.rect.move(-self.speedx, self.speedy)
-        if (self.rect.x <= 0):
-            self.rect = self.rect.move(self.speedx, self.speedy)
-    def movingRight(self, data):
-        #if (self.rect.x + self.width < data.width):
-        self.rect = self.rect.move(self.speedx, self.speedy)
-        if (self.rect.x + self.width < data.width):
-            self.rect = self.rect.move(-self.speedx, self.speedy)
-    def enemyCollSteps(self, data):
-        isColliding = False
-        for step in data.stepsList:
-            if (len(step.rect.collidelistall([self])) > 0):
-                isColliding = True
-        if (isColliding):
-            self.rect = self.rect.move(0, -data.speedy)
-        else:
-            self.rect = self.rect.move(0, self.gravity)
-    def killBall(self, data):
-        pass
-
 
 # Rotate an image around its center
 # I did NOT write this function!
@@ -666,8 +945,8 @@ def changeLevel(data):
 
 # freeze screen for 5s (3rd most common)
 # +5 points (most common)
-# kill enemy (least common)
-# increase ball speed (2nd most common)
+# bomb (bad) (least common)
+# increase ball speed for 5s (2nd most common)
 
 # also have to determine how often a powerup is placed on the screen
     # if random.randint(1, 4) == 1 then decide on powerup
@@ -697,27 +976,32 @@ class Powerup(pygame.sprite.Sprite):
 
 class addPoints(Powerup):
     def whenToSpawn(self):
-        Powerup().genPowerup() #???
         if (self.randNum == 1) or (self.randNum == 2) or (self.randNum == 3):
-            # screen.blit(somewhere)
+            # self.draw(somewhere), screen.blit?
             pass
 
 class freezeScreen(Powerup):
     def whenToSpawn(self):
         if (self.randNum == 7) or (self.randNum == 8):      
             pass
+    def freezeScreen(self):
+        # Freezes the steps for 5 seconds
 
 class incBallSpeed(Powerup):
     def whenToSpawn(self):
         if (self.randNum == 4) or (self.randNum == 5) or (self.randNum == 6):
             # screen.blit(somewhere)
             pass
+    def increase(self):
+        data.ball.speedx += 9
 
 class killEnemy(Powerup):
     def whenToSpawn(self):
         if (self.randNum == 9) or (self.randNum == 10):
             # screen.blit(somewhere)
             pass
+    def kill(self):
+        # removes enemy from screen
 
 
 
@@ -739,7 +1023,7 @@ def keyPressed(event, data):
 
 def keyUnpressed(event, data):
     # If the keys are not being pressed, the ball stops moving
-    if (event.key == K_LEFT) or (event.key == K_DOWN):
+    if (event.key == K_LEFT) or (event.key == K_RIGHT):
         data.ball.speedx = 0
         data.ball.speedy = 0
 
@@ -784,9 +1068,9 @@ def timerFired(data):
     data.clock.tick(data.FPS)
     data.mousePos = pygame.mouse.get_pos()
     data.ball.ballStepsColl(data)
-    data.enemy.movingLeft(data)
-    data.enemy.movingRight(data)
-    data.enemy.enemyCollSteps(data)
+    # data.enemy.movingLeft(data)
+    # data.enemy.movingRight(data)
+    # data.enemy.enemyCollSteps(data)
     changeLevel(data)
     updateScore(data)
     gameOver(data)
@@ -885,7 +1169,7 @@ def init(data):
     initTimes(data)
     initSteps(data)
     initBall(data)
-    initEnemy(data)
+    #initEnemy(data)
     initPowerups(data)
     initSounds(data)
     initBackground(data)
